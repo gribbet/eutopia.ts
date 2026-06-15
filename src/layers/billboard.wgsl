@@ -73,7 +73,7 @@ fn render(input: VertexOutput) -> RenderOutput {
     if color.a < 0.01 {
         discard;
     }
-    return RenderOutput(color, vec4(input.outline.rgb, input.outline.a * step(0.5, texel.a)));
+    return RenderOutput(color, vec4(input.outline.rgb, input.outline.a * texel.a));
 }
 
 @fragment

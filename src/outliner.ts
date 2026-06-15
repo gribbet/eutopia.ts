@@ -52,7 +52,19 @@ export const createOutliner = async ({
         visibility: GPUShaderStage.FRAGMENT,
         texture: {},
       },
+      {
+        binding: 2,
+        visibility: GPUShaderStage.FRAGMENT,
+        sampler: {},
+      },
     ],
+  });
+
+  const outlineSampler = device.createSampler({
+    addressModeU: "clamp-to-edge",
+    addressModeV: "clamp-to-edge",
+    magFilter: "linear",
+    minFilter: "linear",
   });
 
   const pipeline = device.createRenderPipeline({
@@ -74,6 +86,7 @@ export const createOutliner = async ({
       entries: [
         { binding: 0, resource: sceneTexture().createView() },
         { binding: 1, resource: resolvedOutlineTexture().createView() },
+        { binding: 2, resource: outlineSampler },
       ],
     }),
   );

@@ -1,7 +1,17 @@
 @group(0) @binding(0) var sceneTexture: texture_2d<f32>;
 @group(0) @binding(1) var outlineTexture: texture_2d<f32>;
+@group(0) @binding(2) var outlineSampler: sampler;
 
 override devicePixelRatio: f32 = 1.0;
+
+const directions = array(
+    vec2<f32>(-1.0, 0.0),
+    vec2<f32>(1.0, 0.0),
+    vec2<f32>(-0.5, -0.866),
+    vec2<f32>(0.5, 0.866),
+    vec2<f32>(0.5, -0.866),
+    vec2<f32>(-0.5, 0.866)
+);
 
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,
@@ -19,35 +29,27 @@ fn vertex(@builtin(vertex_index) index: u32) -> VertexOutput {
     return output;
 }
 
-fn outlineSample(xy: vec2<i32>) -> vec4<f32> {
-    let size = textureDimensions(outlineTexture);
-    let clamped = clamp(xy, vec2<i32>(0), vec2<i32>(size) - vec2<i32>(1));
-    return textureLoad(outlineTexture, clamped, 0);
+fn outlineSample(xy: vec2<f32>) -> vec4<f32> {
+    let size = vec2<f32>(textureDimensions(outlineTexture));
+    let uv = (xy + vec2<f32>(0.5)) / size;
+    return textureSample(outlineTexture, outlineSampler, uv);
 }
 
 @fragment
 fn fragment(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
     let xy = vec2<i32>(position.xy);
+    let outlineXY = vec2<f32>(xy);
     let scene = textureLoad(sceneTexture, xy, 0);
-    let center = outlineSample(xy);
-    let radius = i32(round(1.5 * devicePixelRatio));
-    let offsets = array(
-        vec2<i32>(-radius, 0),
-        vec2<i32>(radius, 0),
-        vec2<i32>(0, -radius),
-        vec2<i32>(0, radius)
-    );
+    let center = outlineSample(outlineXY);
+    let radius = 1.5 * devicePixelRatio;
     var outline = vec4<f32>(0.0);
     var alpha = 0.0;
 
-    for (var i = 0u; i < 4u; i++) {
-        let sample = outlineSample(xy + offsets[i]);
-        let diff = center.rgb - sample.rgb;
-        let outsideEdge = sample.a * (1.0 - center.a);
-        let colorEdge = min(center.a, sample.a) * smoothstep(0.0001, 0.0025, dot(diff, diff));
-        let sampleAlpha = max(outsideEdge, colorEdge * 0.35);
+    for (var i = 0u; i < 6u; i++) {
+        let sample = outlineSample(outlineXY + directions[i] * radius);
+        let sampleAlpha = sample.a * (1.0 - center.a);
         if sampleAlpha > alpha {
-            outline = sample;
+            outline = vec4(sample.rgb / max(sample.a, 1e-6), sample.a);
             alpha = sampleAlpha;
         }
     }
