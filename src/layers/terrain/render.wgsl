@@ -59,7 +59,7 @@ fn render(input: VertexOutput) -> RenderOutput {
     let dy = dpdy(uv * size);
     let lod = max(log2(max(length(dx), length(dy))) + log2(devicePixelRatio) + 0.5, 0.0);
     let color = textureSampleLevel(imageryTextures, sample, uv, index.x, lod);
-    return RenderOutput(color, outline);
+    return RenderOutput(color, vec4(outline.rgb, outline.a * step(0.5, color.a)));
 }
 
 @fragment

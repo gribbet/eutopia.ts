@@ -68,11 +68,12 @@ fn vertex(
 
 @fragment
 fn render(input: VertexOutput) -> RenderOutput {
-    let color = textureSampleBias(textures, sample, input.uv, input.texture, -1.0) * input.color;
+    let texel = textureSampleBias(textures, sample, input.uv, input.texture, -1.0);
+    let color = texel * input.color;
     if color.a < 0.01 {
         discard;
     }
-    return RenderOutput(color, input.outline);
+    return RenderOutput(color, vec4(input.outline.rgb, input.outline.a * step(0.5, texel.a)));
 }
 
 @fragment
