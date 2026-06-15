@@ -9,7 +9,7 @@ import { mat4 } from "wgpu-matrix";
 import { createLayer, type LayerDescriptor, viewLayout } from "./common";
 import { container } from "./container";
 import type { Context } from "./context";
-import type { Vec2, View } from "./model";
+import type { View } from "./model";
 import { createMouse } from "./mouse";
 import { createPicker } from "./picker";
 import { createRenderer } from "./renderer";
@@ -30,6 +30,7 @@ export const createWorld = async (
 
   const renderer = await createRenderer(context);
   const picker = createPicker(context);
+  const { pick } = picker;
 
   const viewUniform = buffer(
     struct({
@@ -77,12 +78,6 @@ export const createWorld = async (
 
   const root = await createLayer(context, container({ layers }));
 
-  const pick = (xy: Vec2) =>
-    picker.read(xy, pass => {
-      pass.setBindGroup(0, bindGroup);
-      root.pick?.(pass);
-    });
-
   createMouse({ element, pick, pickRegistry, view });
 
   let running = true;
@@ -106,9 +101,15 @@ export const createWorld = async (
       root.render(pass);
     });
 
+    picker.encode(encoder, pass => {
+      pass.setBindGroup(0, bindGroup);
+      root.pick?.(pass);
+    });
+
     device.queue.submit([encoder.finish()]);
 
     root.postFrame?.();
+    picker.postFrame();
 
     requestAnimationFrame(frame);
   };

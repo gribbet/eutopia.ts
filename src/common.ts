@@ -68,14 +68,3 @@ export const debounce = (callback: () => void, delay: number) => {
     }, delay);
   };
 };
-
-export const createLock = () => {
-  let pending = Promise.resolve();
-  return async () => {
-    const previous = pending;
-    let resolve = () => {};
-    pending = new Promise(_ => (resolve = _));
-    await previous;
-    return resolve;
-  };
-};
