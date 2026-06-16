@@ -90,12 +90,14 @@ fn computeCorners(idx: u32) -> Corners {
     let v = vertices[idx];
     let isFirst = (v.flags & 1u) != 0u;
     let isLast = (v.flags & 2u) != 0u;
+    let hasPrev = !isFirst;
+    let hasNext = !isLast;
 
     let localCurr = transform(v.position, view.center, view.projection);
     var localPrev = localCurr;
-    if !isFirst { localPrev = transform(vertices[idx - 1u].position, view.center, view.projection); }
+    if hasPrev { localPrev = transform(vertices[idx - 1u].position, view.center, view.projection); }
     var localNext = localCurr;
-    if !isLast { localNext = transform(vertices[idx + 1u].position, view.center, view.projection); }
+    if hasNext { localNext = transform(vertices[idx + 1u].position, view.center, view.projection); }
 
     let clipCurr = view.projection * vec4(localCurr, 1.0);
     let screenPrev = toScreen(view.projection * vec4(localPrev, 1.0));
@@ -115,7 +117,7 @@ fn computeCorners(idx: u32) -> Corners {
     for (var i = 0u; i < 4u; i++) {
         let offset = joinOffset(
             screenPrev, screenCurr, screenNext,
-            !isFirst, !isLast,
+            hasPrev, hasNext,
             cornerXs[i], sides[i],
         );
         out.clips[i] = clipCurr + vec4(offset * halfPx / halfScreen * clipCurr.w, 0.0, 0.0);
@@ -152,17 +154,15 @@ fn vertex(
         let bi = vert - 6u;
         if isLast {
             clipPos = curr.clips[degenSeq[bi]];
-        } else {
+        } else if fromNext[bi] {
             let next = computeCorners(inst + 1u);
-            if fromNext[bi] {
-                clipPos = next.clips[nextSeq[bi]];
-                localPos = next.local;
-                color = vertices[inst + 1u].color;
-                pickId = vertices[inst + 1u].pickId;
-                outline = vertices[inst + 1u].outline;
-            } else {
-                clipPos = curr.clips[currSeq[bi]];
-            }
+            clipPos = next.clips[nextSeq[bi]];
+            localPos = next.local;
+            color = vertices[inst + 1u].color;
+            pickId = vertices[inst + 1u].pickId;
+            outline = vertices[inst + 1u].outline;
+        } else {
+            clipPos = curr.clips[currSeq[bi]];
         }
     }
 
