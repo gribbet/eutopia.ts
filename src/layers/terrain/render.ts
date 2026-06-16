@@ -1,4 +1,4 @@
-import { derived } from "@gribbet/signal.ts";
+import { derived, effect } from "@gribbet/signal.ts";
 
 import { createDataBuffer } from "../../buffer";
 import type { Context } from "../../context";
@@ -68,9 +68,14 @@ export const createRenderPipeline = async ({
   });
 
   const pickStorage = buffer(u32(), device, { usage: GPUBufferUsage.UNIFORM });
+  effect(() => {
+    pickStorage.value = pickId();
+  });
+
   const outlineStorage = buffer(vec4f(), device, {
     usage: GPUBufferUsage.UNIFORM,
   });
+  outlineStorage.value = outline;
 
   const resolution = 21;
   const count = resolution + 2;
@@ -149,7 +154,7 @@ export const createRenderPipeline = async ({
     ],
     topology: "triangle-list",
     code,
-    constants: { devicePixelRatio },
+    constants: { ["device_pixel_ratio"]: devicePixelRatio },
     depth,
     polygonOffset,
     bindGroup,
@@ -162,8 +167,6 @@ export const createRenderPipeline = async ({
 
   const update = (encoder: GPUCommandEncoder) => {
     encoder.copyBufferToBuffer(countBuffer, 0, indirectBuffer, 4, 4);
-    pickStorage.value = pickId();
-    outlineStorage.value = outline;
     pickStorage.flush();
     outlineStorage.flush();
   };

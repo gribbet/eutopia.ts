@@ -75,7 +75,7 @@ export const createOutliner = async ({
     fragment: {
       module,
       entryPoint: "fragment",
-      constants: { devicePixelRatio },
+      constants: { ["device_pixel_ratio"]: devicePixelRatio },
       targets: [{ format }],
     },
   });

@@ -1,17 +1,17 @@
-struct Vertex {
+struct VertexIn {
     position: Position,
     width: f32,
     color: vec4<f32>,
-    minWidthPixels: f32,
-    maxWidthPixels: f32,
+    min_width_pixels: f32,
+    max_width_pixels: f32,
     flags: u32,
-    pickId: u32,
+    pick_id: u32,
     outline: vec4<f32>,
 };
 
-@group(1) @binding(0) var<storage, read> vertices: array<Vertex>;
+@group(1) @binding(0) var<storage, read> vertices: array<VertexIn>;
 
-struct VertexOutput {
+struct VertexOut {
     @builtin(position) position: vec4<f32>,
     @location(0) color: vec4<f32>,
     @location(1) local: vec3<f32>,
@@ -19,59 +19,59 @@ struct VertexOutput {
     @location(3) outline: vec4<f32>,
 };
 
-fn pixelsPerUnit(local: vec3<f32>) -> f32 {
+fn pixels_per_unit(local: vec3<f32>) -> f32 {
     let f = length(vec3(view.projection[0][1], view.projection[1][1], view.projection[2][1]));
-    let clipPos = view.projection * vec4(local, 1.0);
-    return f * view.screenSize.y * 0.5 / max(abs(clipPos.w), 1e-6);
+    let clip_pos = view.projection * vec4(local, 1.0);
+    return f * view.screen_size.y * 0.5 / max(abs(clip_pos.w), 1e-6);
 }
 
-fn safeNormalize(v: vec2<f32>) -> vec2<f32> {
+fn safe_normalize(v: vec2<f32>) -> vec2<f32> {
     let l = length(v);
     if l > 1e-6 { return v / l; }
     return vec2<f32>(0.0);
 }
 
-fn toScreen(clip: vec4<f32>) -> vec2<f32> {
-    return (clip.xy / max(abs(clip.w), 1e-6)) * view.screenSize * 0.5;
+fn to_screen(clip: vec4<f32>) -> vec2<f32> {
+    return (clip.xy / max(abs(clip.w), 1e-6)) * view.screen_size * 0.5;
 }
 
-fn joinOffset(
-    screenPrev: vec2<f32>,
-    screenCurrent: vec2<f32>,
-    screenNext: vec2<f32>,
-    hasPrev: bool,
-    hasNext: bool,
-    cornerX: f32,
+fn join_offset(
+    screen_prev: vec2<f32>,
+    screen_current: vec2<f32>,
+    screen_next: vec2<f32>,
+    has_prev: bool,
+    has_next: bool,
+    corner_x: f32,
     side: f32,
 ) -> vec2<f32> {
-    if !hasPrev || !hasNext {
+    if !has_prev || !has_next {
         var tangent = vec2<f32>(1.0, 0.0);
-        if hasNext {
-            tangent = safeNormalize(screenNext - screenCurrent);
-        } else if hasPrev {
-            tangent = safeNormalize(screenCurrent - screenPrev);
+        if has_next {
+            tangent = safe_normalize(screen_next - screen_current);
+        } else if has_prev {
+            tangent = safe_normalize(screen_current - screen_prev);
         }
 
         let normal = vec2<f32>(-tangent.y, tangent.x);
         return normal * side;
     }
 
-    var a = safeNormalize(screenCurrent - screenPrev);
-    var b = safeNormalize(screenNext - screenCurrent);
+    var a = safe_normalize(screen_current - screen_prev);
+    var b = safe_normalize(screen_next - screen_current);
 
     if length(a) <= 1e-6 { a = b; }
     if length(b) <= 1e-6 { b = a; }
 
     var direction = a;
-    if length(a + b) > 1e-6 { direction = safeNormalize(a + b); }
+    if length(a + b) > 1e-6 { direction = safe_normalize(a + b); }
 
-    let point = safeNormalize(a - b);
+    let point = safe_normalize(a - b);
     let normal = vec2<f32>(-direction.y, direction.x);
 
     if sign(side * dot(normal, point)) > 0.0 {
         let ap = vec2<f32>(-a.y, a.x);
         let bp = vec2<f32>(-b.y, b.x);
-        return 0.5 * side * (cornerX * (bp - ap) + ap + bp);
+        return 0.5 * side * (corner_x * (bp - ap) + ap + bp);
     }
 
     let cosine = clamp(dot(a, b), -1.0, 1.0);
@@ -86,41 +86,41 @@ struct Corners {
     local: vec3<f32>,
 };
 
-fn computeCorners(idx: u32) -> Corners {
+fn compute_corners(idx: u32) -> Corners {
     let v = vertices[idx];
-    let isFirst = (v.flags & 1u) != 0u;
-    let isLast = (v.flags & 2u) != 0u;
-    let hasPrev = !isFirst;
-    let hasNext = !isLast;
+    let is_first = (v.flags & 1u) != 0u;
+    let is_last = (v.flags & 2u) != 0u;
+    let has_prev = !is_first;
+    let has_next = !is_last;
 
-    let localCurr = transform(v.position, view.center, view.projection);
-    var localPrev = localCurr;
-    if hasPrev { localPrev = transform(vertices[idx - 1u].position, view.center, view.projection); }
-    var localNext = localCurr;
-    if hasNext { localNext = transform(vertices[idx + 1u].position, view.center, view.projection); }
+    let local_curr = transform(v.position, view.center, view.projection);
+    var local_prev = local_curr;
+    if has_prev { local_prev = transform(vertices[idx - 1u].position, view.center, view.projection); }
+    var local_next = local_curr;
+    if has_next { local_next = transform(vertices[idx + 1u].position, view.center, view.projection); }
 
-    let clipCurr = view.projection * vec4(localCurr, 1.0);
-    let screenPrev = toScreen(view.projection * vec4(localPrev, 1.0));
-    let screenCurr = toScreen(clipCurr);
-    let screenNext = toScreen(view.projection * vec4(localNext, 1.0));
+    let clip_curr = view.projection * vec4(local_curr, 1.0);
+    let screen_prev = to_screen(view.projection * vec4(local_prev, 1.0));
+    let screen_curr = to_screen(clip_curr);
+    let screen_next = to_screen(view.projection * vec4(local_next, 1.0));
 
-    var widthPx = v.width * pixelsPerUnit(localCurr);
-    widthPx = clamp(widthPx, v.minWidthPixels, v.maxWidthPixels);
-    let halfPx = widthPx * 0.5;
-    let halfScreen = view.screenSize * 0.5;
+    var width_px = v.width * pixels_per_unit(local_curr);
+    width_px = clamp(width_px, v.min_width_pixels, v.max_width_pixels);
+    let half_px = width_px * 0.5;
+    let half_screen = view.screen_size * 0.5;
 
-    var cornerXs = array<f32, 4>(-1.0, -1.0, 1.0, 1.0);
+    var corner_xs = array<f32, 4>(-1.0, -1.0, 1.0, 1.0);
     var sides = array<f32, 4>(-1.0, 1.0, -1.0, 1.0);
 
     var out: Corners;
-    out.local = localCurr;
+    out.local = local_curr;
     for (var i = 0u; i < 4u; i++) {
-        let offset = joinOffset(
-            screenPrev, screenCurr, screenNext,
-            hasPrev, hasNext,
-            cornerXs[i], sides[i],
+        let offset = join_offset(
+            screen_prev, screen_curr, screen_next,
+            has_prev, has_next,
+            corner_xs[i], sides[i],
         );
-        out.clips[i] = clipCurr + vec4(offset * halfPx / halfScreen * clipCurr.w, 0.0, 0.0);
+        out.clips[i] = clip_curr + vec4(offset * half_px / half_screen * clip_curr.w, 0.0, 0.0);
     }
     return out;
 }
@@ -129,60 +129,64 @@ fn computeCorners(idx: u32) -> Corners {
 fn vertex(
     @builtin(instance_index) inst: u32,
     @builtin(vertex_index) vert: u32,
-) -> VertexOutput {
+) -> VertexOut {
     // Vertices 0-5:  own quad,    corners [0,2,1, 1,2,3]
     // Vertices 6-11: bridge quad, [curr2,next0,curr3, curr3,next0,next1]
     //                Degenerate when isLast: [curr2,curr2,curr3, curr3,curr2,curr3]
-    let isLast = (vertices[inst].flags & 2u) != 0u;
-    let curr = computeCorners(inst);
+    let is_last = (vertices[inst].flags & 2u) != 0u;
+    let curr = compute_corners(inst);
 
-    var ownSeq = array<u32, 6>(0u, 2u, 1u, 1u, 2u, 3u);
-    var degenSeq = array<u32, 6>(2u, 2u, 3u, 3u, 2u, 3u);
-    var currSeq = array<u32, 6>(2u, 0u, 3u, 3u, 0u, 0u);
-    var nextSeq = array<u32, 6>(0u, 0u, 0u, 0u, 0u, 1u);
-    var fromNext = array<bool, 6>(false, true, false, false, true, true);
+    var own_seq = array<u32, 6>(0u, 2u, 1u, 1u, 2u, 3u);
+    var degen_seq = array<u32, 6>(2u, 2u, 3u, 3u, 2u, 3u);
+    var curr_seq = array<u32, 6>(2u, 0u, 3u, 3u, 0u, 0u);
+    var next_seq = array<u32, 6>(0u, 0u, 0u, 0u, 0u, 1u);
+    var from_next = array<bool, 6>(false, true, false, false, true, true);
 
-    var clipPos = curr.clips[0];
-    var localPos = curr.local;
+    var clip_pos = curr.clips[0];
+    var local_pos = curr.local;
     var color = vertices[inst].color;
-    var pickId = vertices[inst].pickId;
+    var pick_id = vertices[inst].pick_id;
     var outline = vertices[inst].outline;
 
     if vert < 6u {
-        clipPos = curr.clips[ownSeq[vert]];
+        let corner = own_seq[vert];
+        clip_pos = curr.clips[corner];
     } else {
         let bi = vert - 6u;
-        if isLast {
-            clipPos = curr.clips[degenSeq[bi]];
-        } else if fromNext[bi] {
-            let next = computeCorners(inst + 1u);
-            clipPos = next.clips[nextSeq[bi]];
-            localPos = next.local;
+        if is_last {
+            let corner = degen_seq[bi];
+            clip_pos = curr.clips[corner];
+        } else if from_next[bi] {
+            let next = compute_corners(inst + 1u);
+            let corner = next_seq[bi];
+            clip_pos = next.clips[corner];
+            local_pos = next.local;
             color = vertices[inst + 1u].color;
-            pickId = vertices[inst + 1u].pickId;
+            pick_id = vertices[inst + 1u].pick_id;
             outline = vertices[inst + 1u].outline;
         } else {
-            clipPos = curr.clips[currSeq[bi]];
+            let corner = curr_seq[bi];
+            clip_pos = curr.clips[corner];
         }
     }
 
-    var out: VertexOutput;
-    out.position = clipPos;
+    var out: VertexOut;
+    out.position = clip_pos;
     out.color = color;
-    out.local = localPos;
-    out.id = pickId;
+    out.local = local_pos;
+    out.id = pick_id;
     out.outline = outline;
     return out;
 }
 
 @fragment
-fn render(in: VertexOutput) -> RenderOutput {
+fn render(in: VertexOut) -> RenderOutput {
     if in.color.a < 0.01 { discard; }
     return RenderOutput(in.color, in.outline);
 }
 
 @fragment
-fn pick(in: VertexOutput) -> PickOutput {
+fn pick(in: VertexOut) -> PickOutput {
     if in.color.a < 0.01 { discard; }
-    return pickOutput(in.local, in.id);
+    return pick_output(in.local, in.id);
 }

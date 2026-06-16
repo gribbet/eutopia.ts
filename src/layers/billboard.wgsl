@@ -9,13 +9,13 @@ struct Billboard {
     texture: i32,
     width: u32,
     height: u32,
-    minScale: f32,
-    maxScale: f32,
-    pickId: u32,
+    min_scale: f32,
+    max_scale: f32,
+    pick_id: u32,
     outline: vec4<f32>,
 };
 
-struct VertexOutput {
+struct Vertex {
     @builtin(position) position: vec4<f32>,
     @location(0) color: vec4<f32>,
     @location(1) uv: vec2<f32>,
@@ -27,10 +27,10 @@ struct VertexOutput {
 
 @vertex
 fn vertex(
-    @builtin(instance_index) instanceIndex: u32,
-    @builtin(vertex_index) vertexIndex: u32
-) -> VertexOutput {
-    let billboard = billboards[instanceIndex];
+    @builtin(instance_index) instance_index: u32,
+    @builtin(vertex_index) vertex_index: u32
+) -> Vertex {
+    let billboard = billboards[instance_index];
 
     let local = transform(billboard.position, view.center, view.projection);
 
@@ -43,31 +43,31 @@ fn vertex(
 
     let width = f32(billboard.width);
     let height = f32(billboard.height);
-    let uvScale = vec2<f32>(width, height) / vec2<f32>(textureDimensions(textures));
-    let uv = (corners[vertexIndex] * 0.5 + 0.5) * uvScale;
+    let uv_scale = vec2<f32>(width, height) / vec2<f32>(textureDimensions(textures));
+    let uv = (corners[vertex_index] * 0.5 + 0.5) * uv_scale;
 
     let aspect = width / height;
-    let screenAspect = view.screenSize.x / view.screenSize.y;
+    let screen_aspect = view.screen_size.x / view.screen_size.y;
 
     let clip = view.projection * vec4(local, 1.0);
-    var scale = clamp(billboard.size / clip.w / height * view.screenSize.y, billboard.minScale, billboard.maxScale);
-    let offset = corners[vertexIndex] * vec2(aspect / screenAspect, -1.0) * scale * height / view.screenSize.y;
+    var scale = clamp(billboard.size / clip.w / height * view.screen_size.y, billboard.min_scale, billboard.max_scale);
+    let offset = corners[vertex_index] * vec2(aspect / screen_aspect, -1.0) * scale * height / view.screen_size.y;
     let position = view.projection * vec4(local, 1.0) + vec4(offset * clip.w, 0.0, 0.0);
 
 
-    var output: VertexOutput;
+    var output: Vertex;
     output.position = position;
     output.color = billboard.color;
     output.uv = uv;
     output.texture = billboard.texture;
     output.local = local;
-    output.id = billboard.pickId;
+    output.id = billboard.pick_id;
     output.outline = billboard.outline;
     return output;
 }
 
 @fragment
-fn render(input: VertexOutput) -> RenderOutput {
+fn render(input: Vertex) -> RenderOutput {
     let texel = textureSampleBias(textures, sample, input.uv, input.texture, -1.0);
     let color = texel * input.color;
     if color.a < 0.01 {
@@ -77,10 +77,10 @@ fn render(input: VertexOutput) -> RenderOutput {
 }
 
 @fragment
-fn pick(input: VertexOutput) -> PickOutput {
+fn pick(input: Vertex) -> PickOutput {
     let color = textureSampleBias(textures, sample, input.uv, input.texture, -1.0);
     if color.a * input.color.a < 0.01 {
         discard;
     }
-    return pickOutput(input.local, input.id);
+    return pick_output(input.local, input.id);
 }

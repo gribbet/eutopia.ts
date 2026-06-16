@@ -1,23 +1,23 @@
 @group(1) @binding(0) var<storage, read_write> tiles: array<Tile>;
 @group(1) @binding(1) var<storage, read_write> count: atomic<u32>;
-@group(1) @binding(2) var<storage, read_write> elevationCache: array<MapEntry>;
-@group(1) @binding(3) var<storage, read> imageryMap: array<MapEntry>;
-@group(1) @binding(4) var<storage, read> elevationMap: array<MapEntry>;
-@group(1) @binding(5) var elevationTextures: texture_2d_array<f32>;
+@group(1) @binding(2) var<storage, read_write> elevation_cache: array<MapEntry>;
+@group(1) @binding(3) var<storage, read> imagery_map: array<MapEntry>;
+@group(1) @binding(4) var<storage, read> elevation_map: array<MapEntry>;
+@group(1) @binding(5) var elevation_textures: texture_2d_array<f32>;
 
 const SUBDIVIDE_PIXEL_THRESHOLD = 512.0;
 
-fn tileElevation(tile: vec3<u32>) -> f32 {
-    let size = arrayLength(&elevationCache);
-    let h = indexHash(tile, size);
-    let cached = elevationCache[h];
+fn tile_elevation(tile: vec3<u32>) -> f32 {
+    let size = arrayLength(&elevation_cache);
+    let h = index_hash(tile, size);
+    let cached = elevation_cache[h];
     if all(cached.key == tile) {
         return f32(cached.value) / 100.0;
     }
-    let index = lookup(tile, &elevationMap);
-    let elevation = sampleElevation(elevationTextures, tile, vec2<f32>(), index);
+    let index = lookup(tile, &elevation_map);
+    let elevation = sample_elevation(elevation_textures, tile, vec2<f32>(), index);
     if index.y == 0 {
-        elevationCache[h] = MapEntry(tile, u32(elevation * 100.0));
+        elevation_cache[h] = MapEntry(tile, u32(elevation * 100.0));
     }
     return elevation;
 }
@@ -28,7 +28,7 @@ fn projectTile(tile: vec3<u32>) -> vec4<f32> {
     let shift = 31u - tile.z;
     let x = tile.x << shift;
     let y = tile.y << shift;
-    let elevation = tileElevation(tile);
+    let elevation = tile_elevation(tile);
     let position = Position(x, y, elevation);
     let local = transform(position, view.center, view.projection);
     let value = view.projection * vec4<f32>(local, 1.0);
@@ -41,7 +41,7 @@ fn screen(v: vec4<f32>) -> vec3<f32> {
 
 
 @compute @workgroup_size(1)
-fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
+fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     var stack: array<vec3<u32>, 256>;
     var index = 1u;
     var total = 0u;
@@ -85,7 +85,7 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
             let n_min = min(min(n1, n2), min(n3, n4));
 
             let span = n_max - n_min;
-            let pixels = span.xy * view.screenSize / 2.0;
+            let pixels = span.xy * view.screen_size / 2.0;
             subdivide = dot(pixels, pixels) > SUBDIVIDE_PIXEL_THRESHOLD * SUBDIVIDE_PIXEL_THRESHOLD;
         }
 
@@ -105,9 +105,9 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
             continue;
         }
 
-        let imageryTexture = lookup(tile, &imageryMap);
-        let elevationTexture = lookup(tile, &elevationMap);
-        tiles[total] = Tile(tile, imageryTexture, elevationTexture);
+        let imagery_texture = lookup(tile, &imagery_map);
+        let elevation_texture = lookup(tile, &elevation_map);
+        tiles[total] = Tile(tile, imagery_texture, elevation_texture);
         total++;
     }
 
@@ -119,16 +119,16 @@ struct MapEntry {
     value: u32,
 }
 
-fn indexHash(v: vec3<u32>, size: u32) -> u32 {
+fn index_hash(v: vec3<u32>, size: u32) -> u32 {
     let p1 = 73856093u;
     let p2 = 19349663u;
     let p3 = 83492791u;
     return ((v.x * p1) ^ (v.y * p2) ^ (v.z * p3)) % size;
 }
 
-fn indexLookup(needle: vec3<u32>, map: ptr<storage, array<MapEntry>, read>) -> u32 {
+fn index_lookup(needle: vec3<u32>, map: ptr<storage, array<MapEntry>, read>) -> u32 {
     let size = arrayLength(map);
-    var h = indexHash(needle, size);
+    var h = index_hash(needle, size);
 
     for (var i = 0u; i < size; i++) {
         let entry = (*map)[h];
@@ -143,18 +143,18 @@ fn indexLookup(needle: vec3<u32>, map: ptr<storage, array<MapEntry>, read>) -> u
     return 0xffffffffu;
 }
 
-fn downsampleTile(tile: vec3<u32>, n: u32) -> vec3<u32> {
+fn downsample_tile(tile: vec3<u32>, n: u32) -> vec3<u32> {
     return vec3<u32>(tile.x >> n, tile.y >> n, select(0u, tile.z - n, tile.z >= n));
 }
 
 fn lookup(tile: vec3<u32>, map: ptr<storage, array<MapEntry>, read>) -> vec2<u32> {
     var current = tile;
     for (var downsample = 0u; downsample <= tile.z; downsample++) {
-        let index = indexLookup(current, map);
+        let index = index_lookup(current, map);
         if index != 0xffffffffu {
             return vec2<u32>(index, downsample);
         }
-        current = downsampleTile(current, 1u);
+        current = downsample_tile(current, 1u);
     }
     return vec2<u32>(0xffffffffu, 0u);
 }
