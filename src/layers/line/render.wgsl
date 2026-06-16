@@ -51,8 +51,9 @@ fn joinOffset(
         } else if hasPrev {
             tangent = safeNormalize(screenCurrent - screenPrev);
         }
+
         let normal = vec2<f32>(-tangent.y, tangent.x);
-        return normal * side + tangent * cornerX;
+        return normal * side;
     }
 
     var a = safeNormalize(screenCurrent - screenPrev);
