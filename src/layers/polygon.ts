@@ -94,6 +94,7 @@ const earcut = (vertices: Vec3[], holes: Vec3[][] = []): number[] => {
 
     // Process holes from rightmost to leftmost to avoid bridge interference
     const order = holes
+      .filter(_ => _.length > 0)
       .map((_, i) => i)
       .sort(
         (a, b) =>
