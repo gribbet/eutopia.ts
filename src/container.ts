@@ -1,12 +1,12 @@
 import {
-  derived,
+  $,
   effect,
   map,
   onCleanup,
   type Properties,
   resolve,
   signal,
-} from "@gribbet/signal.ts";
+} from "signlets";
 
 import {
   createLayerType,
@@ -53,7 +53,7 @@ export const createContainerLayer = (
 
   onCleanup(() => groups.clear());
 
-  const stableList = derived(() => {
+  const stableList = $(() => {
     const next = resolve(layers);
     const nextGroups = new Map<object, Cell[]>();
 

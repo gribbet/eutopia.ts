@@ -1,4 +1,4 @@
-import { derived } from "@gribbet/signal.ts";
+import { $ } from "signlets";
 
 import type { Context } from "./context";
 import { createOutliner } from "./outliner";
@@ -9,12 +9,12 @@ type Renderer = (pass: GPURenderPassEncoder) => void;
 export const createRenderer = async (context: Context) => {
   const { device, size, devicePixelRatio, format, sampleCount } = context;
 
-  const textureSize = derived(() => {
+  const textureSize = $(() => {
     const [width, height] = size();
     return [width * devicePixelRatio, height * devicePixelRatio] as const;
   });
 
-  const renderTexture = derived(() =>
+  const renderTexture = $(() =>
     createTexture(device, {
       size: [...textureSize()],
       sampleCount,
@@ -23,7 +23,7 @@ export const createRenderer = async (context: Context) => {
     }),
   );
 
-  const sceneTexture = derived(() =>
+  const sceneTexture = $(() =>
     createTexture(device, {
       size: [...textureSize()],
       format,
@@ -32,7 +32,7 @@ export const createRenderer = async (context: Context) => {
     }),
   );
 
-  const depthTexture = derived(() =>
+  const depthTexture = $(() =>
     createTexture(device, {
       size: [...textureSize()],
       sampleCount,

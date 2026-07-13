@@ -1,4 +1,4 @@
-import { derived } from "@gribbet/signal.ts";
+import { $ } from "signlets";
 
 import { createBuffer } from "./buffer";
 import type { Context } from "./context";
@@ -22,12 +22,12 @@ export const createPicker = (
   const idReadOffset = readStride * 2;
 
   const { device, size, devicePixelRatio } = context;
-  const textureSize = derived(() => {
+  const textureSize = $(() => {
     const [width, height] = size();
     return [width * devicePixelRatio, height * devicePixelRatio] as const;
   });
 
-  const xyTexture = derived(() =>
+  const xyTexture = $(() =>
     createTexture(device, {
       size: [...textureSize()],
       format: "rg32uint",
@@ -35,7 +35,7 @@ export const createPicker = (
     }),
   );
 
-  const zTexture = derived(() =>
+  const zTexture = $(() =>
     createTexture(device, {
       size: [...textureSize()],
       format: "r32float",
@@ -43,7 +43,7 @@ export const createPicker = (
     }),
   );
 
-  const idTexture = derived(() =>
+  const idTexture = $(() =>
     createTexture(device, {
       size: [...textureSize()],
       format: "r32uint",
@@ -54,7 +54,7 @@ export const createPicker = (
     }),
   );
 
-  const depthTexture = derived(() =>
+  const depthTexture = $(() =>
     createTexture(device, {
       size: [...textureSize()],
       format: "depth24plus",

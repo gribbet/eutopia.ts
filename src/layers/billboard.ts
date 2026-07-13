@@ -1,12 +1,12 @@
 import {
-  derived,
+  $,
   effect,
   map,
   onCleanup,
   type Properties,
   resolve,
   signal,
-} from "@gribbet/signal.ts";
+} from "signlets";
 
 import { createLayerType } from "../common";
 import { loadImage } from "../image-load";
@@ -62,8 +62,7 @@ export const billboard = createLayerType<BillboardProps>(
 
     const [imageMetadata, setImageMetadata] = signal<{
       [url: string]:
-        | { index: number; width: number; height: number }
-        | undefined;
+        { index: number; width: number; height: number } | undefined;
     }>({});
 
     const textureGroup = createTextureGroup({
@@ -109,7 +108,7 @@ export const billboard = createLayerType<BillboardProps>(
       maxAnisotropy: 4,
     });
 
-    const bindGroup = derived(() =>
+    const bindGroup = $(() =>
       device.createBindGroup({
         layout: bindGroupLayout,
         entries: [
@@ -141,7 +140,7 @@ export const billboard = createLayerType<BillboardProps>(
 
       const { position, color, image, size, minScale, maxScale, outline } =
         billboard;
-      const metadata = derived(() => imageMetadata()[resolve(image)]);
+      const metadata = $(() => imageMetadata()[resolve(image)]);
       const pickId = pickRegistry.allocate(billboard);
 
       effect(() => {

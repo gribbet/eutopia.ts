@@ -1,5 +1,6 @@
 {
   "name": "eutopia.ts",
+  "version": "0.0.7",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -22,17 +23,16 @@
   },
   "devDependencies": {
     "@gribbet/eslint-config": "github:gribbet/eslint-config",
-    "@webgpu/types": "^0.1.70",
+    "@webgpu/types": "^0.1.71",
     "cpy-cli": "^7.0.0",
-    "eslint": "^10.4.0",
+    "eslint": "^10.7.0",
     "typescript": "^6.0.3",
-    "vite": "^8.0.14"
+    "vite": "^8.1.4"
   },
   "dependencies": {
     "wgpu-matrix": "^3.4.2"
   },
   "peerDependencies": {
-    "@gribbet/signal.ts": "^1.0.0"
-  },
-  "version": "0.0.6"
+    "signlets": "^1.0.0"
+  }
 }

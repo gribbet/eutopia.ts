@@ -1,5 +1,5 @@
-import type { Signal } from "@gribbet/signal.ts";
-import { derived } from "@gribbet/signal.ts";
+import type { Signal } from "signlets";
+import { $ } from "signlets";
 
 import { createBuffer, createDataBuffer } from "../../buffer";
 import { viewLayout } from "../../common";
@@ -89,7 +89,7 @@ export const createComputePipeline = async ({
     new Uint32Array(new Array(4 * 16376).fill(0xffffffff)),
   );
 
-  const bindGroup = derived(() =>
+  const bindGroup = $(() =>
     device.createBindGroup({
       layout,
       entries: [

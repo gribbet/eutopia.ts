@@ -1,8 +1,8 @@
 import {
+  $,
   createContext,
   createControl,
   createWorld,
-  derived,
   fill,
   line,
   map,
@@ -155,7 +155,7 @@ export const createApp = () =>
 
     const cubeMesh = createCubeMesh();
     const cubeSize = 1000; // 50 km half-extent
-    const spin = derived<Vec4>(() => {
+    const spin = $<Vec4>(() => {
       const a = time() * 0.0005;
       return [0, Math.sin(a / 2), 0, Math.cos(a / 2)];
     });
@@ -206,7 +206,7 @@ export const createApp = () =>
     ];
 
     // Animated ring line that depends on time
-    const animatedRingLine = derived(() => {
+    const animatedRingLine = $(() => {
       const pulse = 800 + Math.sin(time() * 0.002) * 400;
       const centerLon = -122.4194;
       const centerLat = 37.7749;
@@ -227,7 +227,7 @@ export const createApp = () =>
       return ringPoints;
     });
 
-    const lineExamples = derived(() => [animatedRingLine()]);
+    const lineExamples = $(() => [animatedRingLine()]);
 
     const staticLineExamples = [redOrangeLine, waypointsLine];
 
@@ -236,11 +236,10 @@ export const createApp = () =>
     const textEntries = map(
       items,
       item => {
-        const targetColor = derived(
-          (): Vec4 =>
-            item().test ? [1.0, 0.35, 0.35, 1.0] : [1.0, 1.0, 1.0, 1.0],
+        const targetColor = $((): Vec4 =>
+          item().test ? [1.0, 0.35, 0.35, 1.0] : [1.0, 1.0, 1.0, 1.0],
         );
-        const position = derived(() => item().position);
+        const position = $(() => item().position);
         const color = vec4Transition(targetColor);
         const updatePosition = (nextPosition: Vec3) => {
           const { id } = item();
@@ -267,7 +266,7 @@ export const createApp = () =>
       { key: _ => _.id },
     );
 
-    const layers = derived(() => [
+    const layers = $(() => [
       terrain({ imageryUrl, elevationUrl, onClick: onTerrainClick }),
       text({ entries: textEntries }),
       line({ vertices: staticLineExamples, outline }),

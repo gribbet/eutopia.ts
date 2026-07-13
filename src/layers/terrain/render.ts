@@ -1,4 +1,4 @@
-import { derived, effect } from "@gribbet/signal.ts";
+import { $, effect } from "signlets";
 
 import { createDataBuffer } from "../../buffer";
 import type { Context } from "../../context";
@@ -123,7 +123,7 @@ export const createRenderPipeline = async ({
     maxAnisotropy: 4,
   });
 
-  const bindGroup = derived(() =>
+  const bindGroup = $(() =>
     device.createBindGroup({
       layout: bindGroupLayout,
       entries: [

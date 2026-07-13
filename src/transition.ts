@@ -1,4 +1,4 @@
-import { derived, type Signal, signal, untrack } from "@gribbet/signal.ts";
+import { $, type Signal, signal, untrack } from "signlets";
 
 import {
   lerp,
@@ -20,7 +20,7 @@ const tick = (t: number) => {
 requestAnimationFrame(tick);
 
 export const atFrame = <T>(source: Signal<T>) =>
-  derived(() => {
+  $(() => {
     now();
     return untrack(source);
   });
@@ -33,7 +33,7 @@ export const transition =
   (target: Signal<T>): Signal<T> => {
     let current: T | undefined;
     let last: number | undefined;
-    return derived(() => {
+    return $(() => {
       const t = now();
       const time = (t - (last ?? t)) / 1000;
       last = t;

@@ -1,12 +1,12 @@
 import {
-  derived,
+  $,
   effect,
   map,
   onCleanup,
   type Properties,
   resolve,
   signal,
-} from "@gribbet/signal.ts";
+} from "signlets";
 
 import { createDataBuffer } from "../buffer";
 import { createLayerType } from "../common";
@@ -85,7 +85,7 @@ export const object = createLayerType<ObjectProps>(
       ],
     });
 
-    const bindGroup = derived(() =>
+    const bindGroup = $(() =>
       device.createBindGroup({
         layout: bindGroupLayout,
         entries: [{ binding: 0, resource: { buffer: slots.buffer() } }],

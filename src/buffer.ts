@@ -1,4 +1,4 @@
-import { onCleanup, signal } from "@gribbet/signal.ts";
+import { onCleanup, signal } from "signlets";
 
 export const createBuffer = (
   device: GPUDevice,

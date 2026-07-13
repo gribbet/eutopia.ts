@@ -1,10 +1,4 @@
-import {
-  effect,
-  map,
-  type Properties,
-  resolve,
-  signal,
-} from "@gribbet/signal.ts";
+import { effect, map, type Properties, resolve, signal } from "signlets";
 
 import { createLayer, createLayerType } from "../common";
 import type { Vec3, Vec4 } from "../model";

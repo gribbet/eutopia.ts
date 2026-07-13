@@ -1,10 +1,4 @@
-import {
-  derived,
-  onCleanup,
-  type Properties,
-  resolve,
-  signal,
-} from "@gribbet/signal.ts";
+import { $, onCleanup, type Properties, resolve, signal } from "signlets";
 
 import type { Vec3, Vec4 } from "./model";
 
@@ -49,7 +43,7 @@ export const createPickRegistry = () => {
       handlers.delete(id);
       freeList.push(id);
     });
-    return derived(() =>
+    return $(() =>
       resolve(entry.pickable) !== false && draggingId() !== id ? id : 0,
     );
   };
@@ -85,7 +79,7 @@ export const createPickRegistry = () => {
   const hasHandler = (id: number, type: PickEventType) =>
     resolve(handlers.get(id)?.[type]) !== undefined;
 
-  const isDragging = derived(() => draggingId() !== 0);
+  const isDragging = $(() => draggingId() !== 0);
 
   return { allocate, hasHandler, isDragging, ...dispatch };
 };

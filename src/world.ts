@@ -1,9 +1,4 @@
-import {
-  effect,
-  onCleanup,
-  type Properties,
-  resolve,
-} from "@gribbet/signal.ts";
+import { effect, onCleanup, type Properties, resolve } from "signlets";
 import { mat4 } from "wgpu-matrix";
 
 import { createLayer, type LayerDescriptor, viewLayout } from "./common";
@@ -109,7 +104,7 @@ export const createWorld = async (
     device.queue.submit([encoder.finish()]);
 
     root.postFrame?.();
-    picker.postFrame();
+    void picker.postFrame();
 
     requestAnimationFrame(frame);
   };

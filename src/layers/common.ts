@@ -1,5 +1,5 @@
-import type { Signal } from "@gribbet/signal.ts";
-import { derived, type Properties, resolve } from "@gribbet/signal.ts";
+import type { Signal } from "signlets";
+import { $, type Properties, resolve } from "signlets";
 
 import { viewLayout } from "../common";
 import type { Context } from "../context";
@@ -58,7 +58,7 @@ export const createLayerRenderer = async ({
     alpha: { srcFactor: "one", dstFactor: "one-minus-src-alpha" },
   };
 
-  const depthStencil = derived(() => {
+  const depthStencil = $(() => {
     const depthEnabled = resolve(depth) ?? true;
     return {
       format: "depth24plus" as const,
@@ -68,7 +68,7 @@ export const createLayerRenderer = async ({
     } satisfies GPUDepthStencilState;
   });
 
-  const pipeline = derived(() =>
+  const pipeline = $(() =>
     device.createRenderPipeline({
       ...base,
       depthStencil: depthStencil(),
@@ -91,7 +91,7 @@ export const createLayerRenderer = async ({
     }),
   );
 
-  const pickPipeline = derived(() =>
+  const pickPipeline = $(() =>
     device.createRenderPipeline({
       ...base,
       depthStencil: { ...depthStencil(), depthWriteEnabled: true },

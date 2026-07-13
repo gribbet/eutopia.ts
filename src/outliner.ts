@@ -1,4 +1,4 @@
-import { derived } from "@gribbet/signal.ts";
+import { $ } from "signlets";
 
 import type { Context } from "./context";
 import { createTexture } from "./texture";
@@ -21,7 +21,7 @@ export const createOutliner = async ({
     await fetch(new URL("./outliner.wgsl", import.meta.url))
   ).text();
 
-  const outlineTexture = derived(() =>
+  const outlineTexture = $(() =>
     createTexture(device, {
       size: [...textureSize()],
       sampleCount,
@@ -30,7 +30,7 @@ export const createOutliner = async ({
     }),
   );
 
-  const resolvedOutlineTexture = derived(() =>
+  const resolvedOutlineTexture = $(() =>
     createTexture(device, {
       size: [...textureSize()],
       format: outlineTextureFormat,
@@ -80,7 +80,7 @@ export const createOutliner = async ({
     },
   });
 
-  const bindGroup = derived(() =>
+  const bindGroup = $(() =>
     device.createBindGroup({
       layout: bindGroupLayout,
       entries: [

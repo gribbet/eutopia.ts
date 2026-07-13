@@ -1,4 +1,4 @@
-import { derived, effect, resolve } from "@gribbet/signal.ts";
+import { $, effect, resolve } from "signlets";
 
 import { createLayerType } from "../../common";
 import type { Vec3, Vec4 } from "../../model";
@@ -65,7 +65,7 @@ export const line = createLayerType<LineProps>(async (context, props) => {
     ],
   });
 
-  const bindGroup = derived(() =>
+  const bindGroup = $(() =>
     device.createBindGroup({
       layout: bindGroupLayout,
       entries: [{ binding: 0, resource: { buffer: storage.buffer() } }],

@@ -1,4 +1,4 @@
-import { derived, resolve } from "@gribbet/signal.ts";
+import { $, resolve } from "signlets";
 
 import { createDataBuffer } from "../../buffer";
 import { createLayerType } from "../../common";
@@ -34,7 +34,7 @@ export const terrain = createLayerType<TerrainProps>(async (context, props) => {
 
   const imageryMap = createTileMapBuffer(device);
 
-  const imagery = derived(() =>
+  const imagery = $(() =>
     createTileTextureGroup({
       context,
       map: imageryMap,
@@ -43,11 +43,11 @@ export const terrain = createLayerType<TerrainProps>(async (context, props) => {
     }),
   );
 
-  const imageryTextures = derived(() => imagery().texture());
+  const imageryTextures = $(() => imagery().texture());
 
   const elevationMap = createTileMapBuffer(device);
 
-  const elevation = derived(() =>
+  const elevation = $(() =>
     createTileTextureGroup({
       context,
       map: elevationMap,
@@ -56,7 +56,7 @@ export const terrain = createLayerType<TerrainProps>(async (context, props) => {
     }),
   );
 
-  const elevationTextures = derived(() => elevation().texture());
+  const elevationTextures = $(() => elevation().texture());
 
   const pickId = pickRegistry.allocate(props);
 

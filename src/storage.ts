@@ -1,4 +1,4 @@
-import { type Signal, signal } from "@gribbet/signal.ts";
+import { type Signal, signal } from "signlets";
 
 import { createResizableBuffer } from "./buffer";
 import { mercatorFromLonLat } from "./math";
