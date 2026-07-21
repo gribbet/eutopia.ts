@@ -44,7 +44,7 @@ export const transition =
     });
   };
 
-const expQ = (time: number) => 1 - Math.exp((-time * 1000) / 100);
+export const expQ = (time: number) => 1 - Math.exp((-time * 1000) / 100);
 
 export const vec4Transition = transition<Vec4>(({ time, current, target }) =>
   lerpVec4(current, target, expQ(time)),
