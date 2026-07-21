@@ -95,8 +95,8 @@ export const terrain = createLayerType<TerrainProps>(async (context, props) => {
   const postFrame = async () => {
     const tiles = await computePipeline.read();
     if (!tiles) return;
-    imagery().ensure(tiles);
     elevation().ensure(tiles);
+    imagery().ensure(tiles);
   };
 
   return {
