@@ -15,6 +15,9 @@ fn tile_elevation(tile: vec3<u32>) -> f32 {
         return f32(cached.value) / 100.0;
     }
     let index = lookup(tile, &elevation_map);
+    if index.x == 0xffffffffu {
+        return 0.0;
+    }
     let elevation = sample_elevation(elevation_textures, tile, vec2<f32>(), index);
     if index.y == 0 {
         elevation_cache[h] = MapEntry(tile, u32(elevation * 100.0));
@@ -73,7 +76,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
         }
 
         var subdivide = false;
-        if z < 3 || any(cw <= vec4(0.0)) {
+        if z < 3 || any(cw <= vec4(0.0)) || any(cz <= vec4(0.0)) {
             subdivide = true;
         } else {
             let n1 = screen(c1);
@@ -89,7 +92,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             subdivide = dot(pixels, pixels) > SUBDIVIDE_PIXEL_THRESHOLD * SUBDIVIDE_PIXEL_THRESHOLD;
         }
 
-        if subdivide && z <= 20u {
+        if subdivide && z <= 22u {
             stack[index] = vec3<u32>(2 * x, 2 * y, z + 1);
             index++;
             stack[index] = vec3<u32>(2 * x + 1, 2 * y, z + 1);
