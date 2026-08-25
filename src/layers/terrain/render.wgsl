@@ -53,7 +53,7 @@ fn render(input: VertexOut) -> RenderOutput {
         discard;
     }
     let k = 1u << index.y;
-    let uv = (vec2<f32>(tile.xy % k) + input.uv) / f32(k);
+    let uv = (vec2<f32>(tile.xy & vec2<u32>(k - 1u)) + input.uv) / f32(k);
     let size = vec2<f32>(textureDimensions(imagery_textures).xy);
     let dx = dpdx(uv * size);
     let dy = dpdy(uv * size);
