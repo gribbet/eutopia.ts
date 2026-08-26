@@ -1,6 +1,6 @@
 {
   "name": "eutopia.ts",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -33,6 +33,6 @@
     "wgpu-matrix": "^3.4.2"
   },
   "peerDependencies": {
-    "signlets": "^1.0.0"
+    "signaloits": "^1.0.0"
   }
 }

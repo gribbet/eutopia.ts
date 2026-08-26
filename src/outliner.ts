@@ -1,4 +1,4 @@
-import { $ } from "signlets";
+import { $ } from "signaloits";
 
 import type { Context } from "./context";
 import { createTexture } from "./texture";

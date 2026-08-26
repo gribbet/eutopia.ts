@@ -1,4 +1,4 @@
-import { $, effect, resolve } from "signlets";
+import { $, effect, resolve } from "signaloits";
 
 import { createLayerType } from "../../common";
 import type { Vec3, Vec4 } from "../../model";

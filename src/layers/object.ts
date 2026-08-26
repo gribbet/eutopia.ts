@@ -4,9 +4,10 @@ import {
   map,
   onCleanup,
   type Properties,
+  properties,
   resolve,
   signal,
-} from "signlets";
+} from "signaloits";
 
 import { createDataBuffer } from "../buffer";
 import { createLayerType } from "../common";
@@ -178,8 +179,10 @@ export const object = createLayerType<ObjectProps>(
         color,
         diffuse,
         outline,
-      } = instance;
-      const pickId = pickRegistry.allocate(instance);
+        ...rest
+      } = properties(instance);
+
+      const pickId = pickRegistry.allocate(rest);
       effect(() => {
         item.pickId = pickId();
       });

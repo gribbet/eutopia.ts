@@ -1,5 +1,5 @@
-import type { Signal } from "signlets";
-import { $, type Properties, resolve } from "signlets";
+import type { Signal } from "signaloits";
+import { $, type Properties, resolve } from "signaloits";
 
 import { viewLayout } from "../common";
 import type { Context } from "../context";

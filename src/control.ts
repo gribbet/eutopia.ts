@@ -1,4 +1,4 @@
-import { onCleanup, type Signal } from "signlets";
+import { onCleanup, type Signal } from "signaloits";
 
 import { debounce } from "./common";
 import { enuFromPosition, move, wrapDegDelta } from "./math";

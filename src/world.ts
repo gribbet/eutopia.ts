@@ -1,4 +1,4 @@
-import { effect, onCleanup, type Properties, resolve } from "signlets";
+import { effect, onCleanup, type Properties, resolve } from "signaloits";
 import { mat4 } from "wgpu-matrix";
 
 import { createLayer, type LayerDescriptor, viewLayout } from "./common";

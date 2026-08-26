@@ -1,4 +1,4 @@
-import { type Signal, signal } from "signlets";
+import { type Signal, signal } from "signaloits";
 
 import { createResizableBuffer } from "./buffer";
 import { mercatorFromLonLat } from "./math";

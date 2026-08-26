@@ -1,4 +1,4 @@
-import { $, type Signal, signal, untrack } from "signlets";
+import { $, type Signal, signal, untrack } from "signaloits";
 
 import {
   lerp,

@@ -4,9 +4,10 @@ import {
   map,
   onCleanup,
   type Properties,
+  properties,
   resolve,
   signal,
-} from "signlets";
+} from "signaloits";
 
 import { createLayerType } from "../common";
 import { loadImage } from "../image-load";
@@ -138,10 +139,19 @@ export const billboard = createLayerType<BillboardProps>(
       const [item, release] = slots.allocate();
       onCleanup(release);
 
-      const { position, color, image, size, minScale, maxScale, outline } =
-        billboard;
+      const {
+        image,
+        size,
+        position,
+        color,
+        minScale,
+        maxScale,
+        outline,
+        ...rest
+      } = properties(billboard);
+
       const metadata = $(() => imageMetadata()[resolve(image)]);
-      const pickId = pickRegistry.allocate(billboard);
+      const pickId = pickRegistry.allocate(rest);
 
       effect(() => {
         const data = metadata();

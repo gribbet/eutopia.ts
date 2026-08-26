@@ -1,5 +1,5 @@
-import type { MaybeSignal } from "signlets";
-import { onCleanup, resolve } from "signlets";
+import type { MaybeSignal } from "signaloits";
+import { onCleanup, resolve } from "signaloits";
 
 import { pickFlat } from "./math";
 import type { Vec2, View } from "./model";

@@ -1,4 +1,4 @@
-import { onCleanup, signal } from "signlets";
+import { onCleanup, signal } from "signaloits";
 
 export const createBuffer = (
   device: GPUDevice,

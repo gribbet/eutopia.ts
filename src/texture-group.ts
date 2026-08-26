@@ -1,4 +1,4 @@
-import { onCleanup, signal } from "signlets";
+import { onCleanup, signal } from "signaloits";
 
 import { mipLevelCount, tileTextureLayers } from "./configuration";
 import type { Context } from "./context";

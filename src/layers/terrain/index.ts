@@ -1,4 +1,4 @@
-import { $, resolve } from "signlets";
+import { $, resolve } from "signaloits";
 
 import { createDataBuffer } from "../../buffer";
 import { createLayerType } from "../../common";

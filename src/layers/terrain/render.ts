@@ -1,4 +1,4 @@
-import { $, effect } from "signlets";
+import { $, effect } from "signaloits";
 
 import { createDataBuffer } from "../../buffer";
 import type { Context } from "../../context";

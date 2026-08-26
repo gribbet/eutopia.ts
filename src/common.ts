@@ -1,4 +1,4 @@
-import type { Properties } from "signlets";
+import type { Properties } from "signaloits";
 
 import type { Context } from "./context";
 

@@ -6,7 +6,7 @@ import {
   type Properties,
   resolve,
   signal,
-} from "signlets";
+} from "signaloits";
 
 import {
   createLayerType,
@@ -79,7 +79,7 @@ export const createContainerLayer = (
 
   const [active, setActive] = signal<Layer[]>([]);
 
-  const items = map(stableList, _ => _.create());
+  const items = map(stableList, _ => _().create());
 
   effect(() => {
     const list = items();

@@ -1,4 +1,4 @@
-import { $, onCleanup, type Properties, resolve, signal } from "signlets";
+import { $, onCleanup, type Properties, resolve, signal } from "signaloits";
 
 import type { Vec3, Vec4 } from "./model";
 

@@ -1,5 +1,5 @@
-import type { Signal } from "signlets";
-import { $ } from "signlets";
+import type { Signal } from "signaloits";
+import { $ } from "signaloits";
 
 import { createBuffer, createDataBuffer } from "../../buffer";
 import { viewLayout } from "../../common";

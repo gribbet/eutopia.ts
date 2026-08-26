@@ -1,4 +1,4 @@
-import { onCleanup, signal } from "signlets";
+import { onCleanup, signal } from "signaloits";
 
 import { tileTextureLayers } from "./configuration";
 import type { Vec2 } from "./model";

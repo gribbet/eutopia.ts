@@ -1,4 +1,11 @@
-import { effect, map, type Properties, resolve, signal } from "signlets";
+import {
+  effect,
+  map,
+  type Properties,
+  properties,
+  resolve,
+  signal,
+} from "signaloits";
 
 import { createLayer, createLayerType } from "../common";
 import type { Vec3, Vec4 } from "../model";
@@ -23,10 +30,10 @@ export type TextProps = CommonLayerProps & {
 };
 
 export const text = createLayerType<TextProps>(
-  (context, { entries, ...properties }) => {
+  (context, { entries, ...props }) => {
     const billboards = map(entries, entry => {
-      const { text, font, fontSize, ...rest } = entry;
       const [image, setImage] = signal<string>("");
+      const { text, font, fontSize, ...rest } = properties(entry);
       effect(() => {
         const textValue = resolve(text);
         if (!textValue) return;
@@ -41,6 +48,6 @@ export const text = createLayerType<TextProps>(
       return { ...rest, image };
     });
 
-    return createLayer(context, billboard({ billboards, ...properties }));
+    return createLayer(context, billboard({ billboards, ...props }));
   },
 );

@@ -1,4 +1,4 @@
-import { onCleanup } from "signlets";
+import { onCleanup } from "signaloits";
 
 export const createTexture = (
   device: GPUDevice,
