@@ -45,7 +45,7 @@ fn screen(v: vec4<f32>) -> vec3<f32> {
 
 @compute @workgroup_size(1)
 fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
-    var stack: array<vec3<u32>, 512>;
+    var stack: array<vec3<u32>, 256>;
     var index = 1u;
     var total = 0u;
 
