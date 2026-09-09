@@ -1,5 +1,5 @@
 import type { MaybeSignal } from "signaloits";
-import { onCleanup, resolve } from "signaloits";
+import { onCleanup, resolve, signal as createSignal } from "signaloits";
 
 import { pickFlat } from "./math";
 import type { Vec2, View } from "./model";
@@ -33,6 +33,7 @@ export const createMouse = ({
   pick: (xy: Vec2) => Promise<PickResult>;
   view: MaybeSignal<View>;
 }) => {
+  const [isDragging, setIsDragging] = createSignal(false);
   const abortController = new AbortController();
   const { signal } = abortController;
 
@@ -127,25 +128,36 @@ export const createMouse = ({
     async event => {
       const [x, y] = pointerPosition(event);
       const { pointerId, button } = event;
+      setIsDragging(true);
       const picked = await readPickEvent([x, y]);
       if (!picked.id) {
+        setIsDragging(false);
         gestures.delete(pointerId);
         return;
       }
 
       pickRegistry.onMouseDown(picked);
+
+      const hasDrag =
+        pickRegistry.hasHandler(picked.id, "onDragStart") ||
+        pickRegistry.hasHandler(picked.id, "onDragFlat") ||
+        pickRegistry.hasHandler(picked.id, "onDrag");
+
+      if (!hasDrag) setIsDragging(false);
+
+      const allowDrag = button === 0 && hasDrag;
+
+      const [, , flatAltitude] = picked.position;
+
       gestures.set(pointerId, {
         targetId: picked.id,
         startX: x,
         startY: y,
         dragging: false,
-        allowDrag:
-          button === 0 &&
-          (pickRegistry.hasHandler(picked.id, "onDragStart") ||
-            pickRegistry.hasHandler(picked.id, "onDrag")),
+        allowDrag,
         allowDragFlat:
           button === 0 && pickRegistry.hasHandler(picked.id, "onDragFlat"),
-        flatAltitude: picked.position[2],
+        flatAltitude,
       });
     },
     { signal },
@@ -185,6 +197,7 @@ export const createMouse = ({
     } else if (!moved && picked.id === gesture.targetId)
       pickRegistry.onClick(picked, gesture.targetId);
 
+    setIsDragging(false);
     gestures.delete(pointerId);
   };
 
@@ -196,4 +209,6 @@ export const createMouse = ({
     pendingMoves.clear();
     if (moveFrame) cancelAnimationFrame(moveFrame);
   });
+
+  return { isDragging };
 };

@@ -79,7 +79,5 @@ export const createPickRegistry = () => {
   const hasHandler = (id: number, type: PickEventType) =>
     resolve(handlers.get(id)?.[type]) !== undefined;
 
-  const isDragging = $(() => draggingId() !== 0);
-
-  return { allocate, hasHandler, isDragging, ...dispatch };
+  return { allocate, hasHandler, ...dispatch };
 };

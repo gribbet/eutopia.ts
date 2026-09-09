@@ -73,7 +73,7 @@ export const createWorld = async (
 
   const root = await createLayer(context, container({ layers }));
 
-  createMouse({ element, pick, pickRegistry, view });
+  const { isDragging } = createMouse({ element, pick, pickRegistry, view });
 
   let running = true;
   const frame = () => {
@@ -116,6 +116,6 @@ export const createWorld = async (
 
   return {
     pick,
-    isDragging: pickRegistry.isDragging,
+    isDragging,
   };
 };
