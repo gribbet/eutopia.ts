@@ -10,6 +10,7 @@ type Gesture = {
   targetId: number;
   startX: number;
   startY: number;
+  button: number;
   dragging: boolean;
   allowDrag: boolean;
   allowDragFlat: boolean;
@@ -153,6 +154,7 @@ export const createMouse = ({
         targetId: picked.id,
         startX: x,
         startY: y,
+        button,
         dragging: false,
         allowDrag,
         allowDragFlat:
@@ -194,8 +196,10 @@ export const createMouse = ({
         const flatEvent = flatPickEvent(gesture, x, y);
         if (flatEvent) pickRegistry.onDragEnd(flatEvent, gesture.targetId);
       }
-    } else if (!moved && picked.id === gesture.targetId)
+    } else if (!moved && picked.id === gesture.targetId && gesture.button === 0)
       pickRegistry.onClick(picked, gesture.targetId);
+    else if (!moved && picked.id === gesture.targetId && gesture.button === 2)
+      pickRegistry.onRightClick(picked, gesture.targetId);
 
     setIsDragging(false);
     gestures.delete(pointerId);
@@ -203,6 +207,9 @@ export const createMouse = ({
 
   element.addEventListener("pointerup", endGesture, { signal });
   element.addEventListener("pointercancel", endGesture, { signal });
+  element.addEventListener("contextmenu", event => event.preventDefault(), {
+    signal,
+  });
 
   onCleanup(() => {
     abortController.abort();

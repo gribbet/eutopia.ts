@@ -16,6 +16,7 @@ export type PickHandlers = {
   onMouseMove?: (event: PickEvent) => void;
   onMouseUp?: (event: PickEvent) => void;
   onClick?: (event: PickEvent) => void;
+  onRightClick?: (event: PickEvent) => void;
   onDragStart?: (event: PickEvent) => void;
   onDrag?: (event: PickEvent) => void;
   onDragEnd?: (event: PickEvent) => void;
@@ -70,6 +71,7 @@ export const createPickRegistry = () => {
     onMouseMove: createDispatch("onMouseMove"),
     onMouseUp: createDispatch("onMouseUp"),
     onClick: createDispatch("onClick"),
+    onRightClick: createDispatch("onRightClick"),
     onDragStart: createDispatch("onDragStart"),
     onDrag: createDispatch("onDrag"),
     onDragEnd: createDispatch("onDragEnd"),
