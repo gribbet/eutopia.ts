@@ -11,7 +11,7 @@ import {
 
 import { createLayerType } from "../common";
 import { loadImage } from "../image-load";
-import type { Vec3, Vec4 } from "../model";
+import type { Vec2, Vec3, Vec4 } from "../model";
 import type { PickHandlers } from "../pick-registry";
 import {
   createSlotAllocator,
@@ -20,6 +20,7 @@ import {
   position,
   struct,
   u32,
+  vec2f,
   vec4f,
 } from "../storage";
 import { createTextureGroup } from "../texture-group";
@@ -28,6 +29,7 @@ export type Billboard = PickHandlers & {
   image: string;
   size: number;
   position: Vec3;
+  offset?: Vec2;
   color?: Vec4;
   minScale?: number;
   maxScale?: number;
@@ -52,6 +54,7 @@ export const billboard = createLayerType<BillboardProps>(
         minScale: f32(),
         maxScale: f32(),
         pickId: u32(),
+        offset: vec2f(),
         outline: vec4f(),
       }),
       device,
@@ -143,6 +146,7 @@ export const billboard = createLayerType<BillboardProps>(
         image,
         size,
         position,
+        offset,
         color,
         minScale,
         maxScale,
@@ -167,6 +171,9 @@ export const billboard = createLayerType<BillboardProps>(
       });
       effect(() => {
         item.position = resolve(position);
+      });
+      effect(() => {
+        item.offset = resolve(offset) ?? [0, 0];
       });
       effect(() => {
         item.color = resolve(color) ?? [1, 1, 1, 1];

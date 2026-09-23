@@ -12,6 +12,7 @@ struct Billboard {
     min_scale: f32,
     max_scale: f32,
     pick_id: u32,
+    offset: vec2<f32>,
     outline: vec4<f32>,
 };
 
@@ -51,8 +52,9 @@ fn vertex(
 
     let clip = view.projection * vec4(local, 1.0);
     var scale = clamp(billboard.size / clip.w / height * view.screen_size.y, billboard.min_scale, billboard.max_scale);
-    let offset = corners[vertex_index] * vec2(aspect / screen_aspect, -1.0) * scale * height / view.screen_size.y;
-    let position = view.projection * vec4(local, 1.0) + vec4(offset * clip.w, 0.0, 0.0);
+    let corner_offset = corners[vertex_index] * vec2(aspect / screen_aspect, -1.0) * scale * height / view.screen_size.y;
+    let pixel_offset = billboard.offset * vec2(2.0, -2.0) / view.screen_size;
+    let position = view.projection * vec4(local, 1.0) + vec4((corner_offset + pixel_offset) * clip.w, 0.0, 0.0);
 
 
     var output: Vertex;
