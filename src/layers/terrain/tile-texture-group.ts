@@ -7,6 +7,7 @@ import { createTextureGroup } from "../../texture-group";
 import { toKey } from "./common";
 import type { TileMapBuffer } from "./tile-map-buffer";
 
+
 export const createTileTextureGroup = ({
   context,
   map,
@@ -33,7 +34,12 @@ export const createTileTextureGroup = ({
         : loadTileImage(tile, signal);
     },
     onLoad: (key, index) => map.set(tilesByKey.get(key)!, index),
-    onEvict: key => map.clear(tilesByKey.get(key)!),
+    onEvict: key => {
+      const tile = tilesByKey.get(key);
+      if (!tile) return;
+      map.clear(tile);
+      tilesByKey.delete(key);
+    },
   });
   const { texture } = textureGroup;
 
