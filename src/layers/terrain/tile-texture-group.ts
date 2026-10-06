@@ -94,10 +94,7 @@ export const createTileTextureGroup = ({
       tiles.map(_ => downsample(_, initialDownsample)).filter(_ => !!_),
     );
     textureGroup.ensure(
-      unique([
-      ...tiles,
-      ...descendants(parents(tiles)),
-    ])
+      unique([...tiles, ...descendants(parents(tiles))])
         .filter(([, , z]) => z <= maxZ)
         .map(xyz => {
           const key = toKey(xyz).toString();

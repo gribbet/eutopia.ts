@@ -24,8 +24,9 @@ export const createControl = ({
 
   const recenter = async () => {
     const { width, height } = element.getBoundingClientRect();
-    const { position } = (await pick([width / 2, height / 2])) ?? {};
-    if (position === undefined) return;
+    const result = await pick([width / 2, height / 2]);
+    if (!result?.id) return;
+    const { position } = result;
 
     const { center, distance, orientation, fieldOfView } = view();
     const [yaw, pitch] = orientation;
