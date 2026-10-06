@@ -70,8 +70,10 @@ export const billboard = createLayerType<BillboardProps>(
           ...imageMetadata(),
           [url]: { index, width, height },
         }),
-      onEvict: url =>
-        setImageMetadata({ ...imageMetadata(), [url]: undefined }),
+      onEvict: url => {
+        const { [url]: _, ...metadata } = imageMetadata();
+        setImageMetadata(metadata);
+      },
     });
 
     const code = await (
