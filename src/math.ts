@@ -70,7 +70,7 @@ export const enuFromPosition = (center: Vec3, position: Vec3): Vec3 => {
   const r = earthRadius + centerAlt;
   const centerLatRad = (centerLat * Math.PI) / 180;
 
-  const dLonRad = ((lon - centerLon) * Math.PI) / 180;
+  const dLonRad = (wrapDegDelta(lon - centerLon) * Math.PI) / 180;
   const dLatRad = ((lat - centerLat) * Math.PI) / 180;
 
   const x = dLonRad * r * Math.cos(centerLatRad);
