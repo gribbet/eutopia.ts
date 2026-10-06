@@ -58,7 +58,8 @@ export const billboard = createLayerType<BillboardProps>(
 
     const [imageMetadata, setImageMetadata] = signal<{
       [url: string]:
-        { index: number; width: number; height: number } | undefined;
+        | { index: number; width: number; height: number }
+        | undefined;
     }>({});
 
     const textureGroup = createTextureGroup({

@@ -1,6 +1,9 @@
 {
   "name": "eutopia.ts",
   "version": "0.0.14",
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -11,26 +14,24 @@
       "default": "./dist/index.js"
     }
   },
-  "files": [
-    "dist"
-  ],
   "scripts": {
     "build": "npm run clean && tsc --project tsconfig.json && npm run copy:assets",
     "clean": "rm -rf dist",
     "copy:assets": "cpy '**/*.wgsl' '../dist' --cwd=src",
-    "lint": "eslint --max-warnings 0 --cache --cache-strategy content .",
+    "fmt": "vp fmt",
+    "lint": "vp lint",
+    "check": "vp check",
     "prepublishOnly": "npm run build"
-  },
-  "devDependencies": {
-    "@gribbet/eslint-config": "github:gribbet/eslint-config",
-    "@webgpu/types": "^0.1.71",
-    "cpy-cli": "^7.0.0",
-    "eslint": "^10.7.0",
-    "typescript": "^6.0.3",
-    "vite": "^8.1.4"
   },
   "dependencies": {
     "wgpu-matrix": "^3.4.2"
+  },
+  "devDependencies": {
+    "@gribbet/vite-config": "^1.0.0",
+    "@webgpu/types": "^0.1.74",
+    "cpy-cli": "^7.0.0",
+    "typescript": "^7.0.2",
+    "vite-plus": "^1.0.0"
   },
   "peerDependencies": {
     "signaloits": "^2.0.2"
