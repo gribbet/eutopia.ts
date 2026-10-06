@@ -28,10 +28,7 @@ export const createTextureGroup = ({
     createTexture(device, {
       size: [width, height, layers],
       format: "rgba8unorm",
-      mipLevelCount: Math.min(
-        mipLevelCount,
-        Math.floor(Math.log2(Math.max(width, height))) + 1,
-      ),
+      mipLevelCount: Math.min(mipLevelCount, Math.floor(Math.log2(Math.max(width, height))) + 1),
       usage:
         GPUTextureUsage.TEXTURE_BINDING |
         GPUTextureUsage.COPY_DST |
@@ -80,17 +77,15 @@ export const createTextureGroup = ({
     return false;
   };
 
-  const normalizeImages = async (_: ImageBitmap | ImageBitmap[]) => {
-    const images = Array.isArray(_)
-      ? _.slice(0, mipLevelCount)
-      : await createMipmaps(_);
+  const normalizeImages = async (source: ImageBitmap | ImageBitmap[]) => {
+    const levels = texture().mipLevelCount;
+    const images = Array.isArray(source)
+      ? source.slice(0, levels)
+      : await createMipmaps(source, levels);
 
     const last = images[images.length - 1];
-    if (last && images.length < mipLevelCount) {
-      const remaining = await createMipmaps(
-        last,
-        mipLevelCount - images.length + 1,
-      );
+    if (last && images.length < levels) {
+      const remaining = await createMipmaps(last, levels - images.length + 1);
       return [...images, ...remaining.slice(1)];
     }
 
@@ -99,10 +94,8 @@ export const createTextureGroup = ({
 
   const doLoad = async (key: string, index: number, signal: AbortSignal) => {
     try {
-      const images = await normalizeImages(await load(key, signal));
-      signal.throwIfAborted();
-
-      const [first] = images;
+      const source = await load(key, signal);
+      const [first] = Array.isArray(source) ? source : [source];
       if (!first) throw new Error(`Texture loader returned no images: ${key}`);
 
       const { width, height } = first;
@@ -111,6 +104,9 @@ export const createTextureGroup = ({
         release(index);
         return;
       }
+
+      const images = await normalizeImages(source);
+      signal.throwIfAborted();
 
       await Promise.all(
         images.map((_, mip) =>
