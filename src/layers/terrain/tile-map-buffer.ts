@@ -8,7 +8,7 @@ export const createTileMapBuffer = (device: GPUDevice) => {
   const buffer = createDataBuffer(
     device,
     GPUBufferUsage.STORAGE,
-    new Uint32Array(new Array(4 * size).fill(0xffffffff)),
+    new Uint32Array(4 * size).fill(0xffffffff),
   );
   const data = new Uint32Array(size * 4).fill(0xffffffff);
 

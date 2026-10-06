@@ -18,7 +18,7 @@ export const resizeImage = (
 
 export const createMipmaps = (image: ImageBitmap, levels = mipLevelCount) =>
   Promise.all(
-    new Array(levels).fill(0).map((_, i) => {
+    Array.from({ length: levels }, (_, i) => {
       const width = Math.max(1, Math.floor(image.width / 2 ** i));
       const height = Math.max(1, Math.floor(image.height / 2 ** i));
       return resizeImage(image, width, height);

@@ -1,12 +1,10 @@
-import { defineConfig } from "@gribbet/vite-config";
+import { config } from "@gribbet/vite-config";
+import { mergeConfig } from "vite-plus";
 
-export default defineConfig({
+export default mergeConfig(config, {
   lint: {
     rules: {
-      "typescript/no-misused-promises": "off",
-      "typescript/no-useless-default-assignment": "off",
       "typescript/unbound-method": "off",
-      "unicorn/no-new-array": "off",
     },
   },
 });

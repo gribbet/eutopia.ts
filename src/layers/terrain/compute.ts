@@ -86,7 +86,7 @@ export const createComputePipeline = async ({
   const elevationCacheBuffer = createDataBuffer(
     device,
     GPUBufferUsage.STORAGE,
-    new Uint32Array(new Array(4 * 16376).fill(0xffffffff)),
+    new Uint32Array(4 * 16376).fill(0xffffffff),
   );
 
   const bindGroup = $(() =>
@@ -134,16 +134,15 @@ export const createComputePipeline = async ({
     buffer.unmap();
     reading = false;
 
-    return new Array(count)
-      .fill(0)
-      .map(
-        (_, i) =>
-          [
-            result[i * 8] ?? 0,
-            result[i * 8 + 1] ?? 0,
-            result[i * 8 + 2] ?? 0,
-          ] satisfies [number, number, number],
-      );
+    return Array.from(
+      { length: count },
+      (_, i) =>
+        [
+          result[i * 8] ?? 0,
+          result[i * 8 + 1] ?? 0,
+          result[i * 8 + 2] ?? 0,
+        ] satisfies [number, number, number],
+    );
   };
 
   return {

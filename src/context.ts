@@ -21,14 +21,13 @@ export const createContext = async (element: HTMLCanvasElement) => {
   const devicePixelRatio = window.devicePixelRatio || 1;
   const { width, height } = element;
   const [size, setSize] = signal<Vec2>([width, height]);
-  const observer = new ResizeObserver(
-    ([{ contentRect: { width, height } = {} } = {}]) => {
-      if (width === undefined || height === undefined) return;
-      element.width = width * devicePixelRatio;
-      element.height = height * devicePixelRatio;
-      setSize([width, height]);
-    },
-  );
+  const observer = new ResizeObserver(([entry]) => {
+    if (!entry) return;
+    const { width, height } = entry.contentRect;
+    element.width = width * devicePixelRatio;
+    element.height = height * devicePixelRatio;
+    setSize([width, height]);
+  });
   observer.observe(element);
 
   const context = element.getContext("webgpu");

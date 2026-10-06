@@ -105,7 +105,7 @@ export const createWorld = async (
     device.queue.submit([encoder.finish()]);
 
     root.postFrame?.();
-    void picker.postFrame();
+    picker.postFrame();
 
     requestAnimationFrame(frame);
   };

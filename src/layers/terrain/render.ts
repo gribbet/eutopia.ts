@@ -79,19 +79,14 @@ export const createRenderPipeline = async ({
 
   const resolution = 21;
   const count = resolution + 2;
-  const vertices = new Array(count + 1)
-    .fill(0)
-    .flatMap((_, x) =>
-      new Array(count + 1)
-        .fill(0)
-        .flatMap((_, y) => [
-          ...[x, y].map(
-            _ =>
-              (Math.min(Math.max(_ - 1, 0), resolution) / resolution) * 2 ** 31,
-          ),
-          [x, y].some(_ => _ === 0 || _ === count) ? 1 : 0,
-        ]),
-    );
+  const vertices = Array.from({ length: count + 1 }, (_, x) =>
+    Array.from({ length: count + 1 }, (_, y) => [
+      ...[x, y].map(
+        _ => (Math.min(Math.max(_ - 1, 0), resolution) / resolution) * 2 ** 31,
+      ),
+      [x, y].some(_ => _ === 0 || _ === count) ? 1 : 0,
+    ]),
+  ).flat(2);
   const indexCount = count ** 2 * 6;
   const indirectBuffer = createDataBuffer(
     device,
@@ -104,12 +99,12 @@ export const createRenderPipeline = async ({
     new Uint32Array(vertices),
   );
 
-  const indices = new Array(count).fill(0).flatMap((_, x) =>
-    new Array(count).fill(0).flatMap((_, y) => {
+  const indices = Array.from({ length: count }, (_, x) =>
+    Array.from({ length: count }, (_, y) => {
       const i = y * (count + 1) + x;
       return [i, i + (count + 2), i + (count + 1), i, i + 1, i + (count + 2)];
-    }),
-  );
+    }).flat(),
+  ).flat();
   const indicesBuffer = createDataBuffer(
     device,
     GPUBufferUsage.INDEX,

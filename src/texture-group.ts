@@ -40,7 +40,7 @@ export const createTextureGroup = ({
 
   const [texture, setTexture] = signal<GPUTexture>(createGroupTexture(8, 8));
 
-  const available = new Set(new Array(layers).fill(0).map((_, i) => i));
+  const available = new Set(Array.from({ length: layers }, (_, i) => i));
 
   const acquire = () => {
     const { done, value } = available.values().next();

@@ -1,6 +1,6 @@
 import type { Vec3 } from "../../model";
 
-export const toKey = ([x = 0, y = 0, z = 0]: Vec3) =>
+export const toKey = ([x, y, z]: Vec3) =>
   y * 2 ** z + x + (4 ** (z + 1) - 1) / 3;
 
 export const fromKey = (key: number) => {

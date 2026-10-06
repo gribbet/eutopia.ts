@@ -124,59 +124,51 @@ export const createMouse = ({
     }
   };
 
-  element.addEventListener(
-    "pointerdown",
-    async event => {
-      const [x, y] = pointerPosition(event);
-      const { pointerId, button } = event;
-      setIsDragging(true);
-      const picked = await readPickEvent([x, y]);
-      if (!picked.id) {
-        setIsDragging(false);
-        gestures.delete(pointerId);
-        return;
-      }
+  const onPointerDown = async (event: PointerEvent) => {
+    const [x, y] = pointerPosition(event);
+    const { pointerId, button } = event;
+    setIsDragging(true);
+    const picked = await readPickEvent([x, y]);
+    if (!picked.id) {
+      setIsDragging(false);
+      gestures.delete(pointerId);
+      return;
+    }
 
-      pickRegistry.onMouseDown(picked);
+    pickRegistry.onMouseDown(picked);
 
-      const hasDrag =
-        pickRegistry.hasHandler(picked.id, "onDragStart") ||
-        pickRegistry.hasHandler(picked.id, "onDragFlat") ||
-        pickRegistry.hasHandler(picked.id, "onDrag");
+    const hasDrag =
+      pickRegistry.hasHandler(picked.id, "onDragStart") ||
+      pickRegistry.hasHandler(picked.id, "onDragFlat") ||
+      pickRegistry.hasHandler(picked.id, "onDrag");
 
-      if (!hasDrag) setIsDragging(false);
+    if (!hasDrag) setIsDragging(false);
 
-      const allowDrag = button === 0 && hasDrag;
+    const allowDrag = button === 0 && hasDrag;
 
-      const [, , flatAltitude] = picked.position;
+    const [, , flatAltitude] = picked.position;
 
-      gestures.set(pointerId, {
-        targetId: picked.id,
-        startX: x,
-        startY: y,
-        button,
-        dragging: false,
-        allowDrag,
-        allowDragFlat:
-          button === 0 && pickRegistry.hasHandler(picked.id, "onDragFlat"),
-        flatAltitude,
-      });
-    },
-    { signal },
-  );
+    gestures.set(pointerId, {
+      targetId: picked.id,
+      startX: x,
+      startY: y,
+      button,
+      dragging: false,
+      allowDrag,
+      allowDragFlat:
+        button === 0 && pickRegistry.hasHandler(picked.id, "onDragFlat"),
+      flatAltitude,
+    });
+  };
 
-  element.addEventListener(
-    "pointermove",
-    event => {
-      const [x, y] = pointerPosition(event);
-      const { pointerId } = event;
-      pendingMoves.set(pointerId, { x, y, pointerId });
-      schedulePointerMove();
-    },
-    { signal },
-  );
+  const onPointerMove = (event: PointerEvent) => {
+    const [x, y] = pointerPosition(event);
+    const { pointerId } = event;
+    pendingMoves.set(pointerId, { x, y, pointerId });
+    schedulePointerMove();
+  };
 
-  const endGesture = async (event: PointerEvent) => {
+  const onPointerUp = async (event: PointerEvent) => {
     const [x, y] = pointerPosition(event);
     const { pointerId } = event;
 
@@ -205,9 +197,19 @@ export const createMouse = ({
     gestures.delete(pointerId);
   };
 
-  element.addEventListener("pointerup", endGesture, { signal });
-  element.addEventListener("pointercancel", endGesture, { signal });
-  element.addEventListener("contextmenu", event => event.preventDefault(), {
+  const onContextMenu = (event: MouseEvent) => event.preventDefault();
+
+  element.addEventListener("pointerdown", event => void onPointerDown(event), {
+    signal,
+  });
+  element.addEventListener("pointermove", onPointerMove, { signal });
+  element.addEventListener("pointerup", event => void onPointerUp(event), {
+    signal,
+  });
+  element.addEventListener("pointercancel", event => void onPointerUp(event), {
+    signal,
+  });
+  element.addEventListener("contextmenu", onContextMenu, {
     signal,
   });
 

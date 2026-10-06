@@ -51,7 +51,7 @@ export const createTileTextureGroup = ({
     crop?: { x: number; y: number; width: number; height: number };
   };
   const computeMipSources = ([x, y, z]: Vec3): MipSource[] =>
-    new Array(mipLevelCount).fill(0).flatMap((_, m) => {
+    Array.from({ length: mipLevelCount }, (_, m) => {
       const ancestorZ = z - m;
       if (ancestorZ < 0) return [];
       if (m === 0) return [{ url: tileUrl(x, y, z) }];
@@ -74,7 +74,7 @@ export const createTileTextureGroup = ({
           },
         },
       ];
-    });
+    }).flat();
 
   const loadTileMipmaps = (tile: Vec3, signal: AbortSignal) =>
     Promise.all(

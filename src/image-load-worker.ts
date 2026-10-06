@@ -4,7 +4,7 @@ export type Data = ["load" | "cancel", string];
 
 const acquire = limit(16);
 
-addEventListener("message", async event => {
+const onMessage = async (event: MessageEvent) => {
   const [action, url] = event.data as Data;
   if (action !== "load") return;
 
@@ -42,4 +42,6 @@ addEventListener("message", async event => {
   } finally {
     release();
   }
-});
+};
+
+addEventListener("message", event => void onMessage(event));

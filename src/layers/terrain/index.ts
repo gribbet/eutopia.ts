@@ -23,7 +23,7 @@ export const terrain = createLayerType<TerrainProps>(async (context, props) => {
   const tilesBuffer = createDataBuffer(
     device,
     GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
-    new Uint32Array(new Array(tileTextureLayers * 8).fill(0)),
+    new Uint32Array(tileTextureLayers * 8),
   );
 
   const countBuffer = createDataBuffer(
@@ -92,7 +92,9 @@ export const terrain = createLayerType<TerrainProps>(async (context, props) => {
 
   const { render, pick } = renderPipeline;
 
-  const postFrame = async () => {
+  const postFrame = () => void updateTiles();
+
+  const updateTiles = async () => {
     const tiles = await computePipeline.read();
     if (!tiles) return;
     elevation().ensure(tiles);

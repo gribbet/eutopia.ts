@@ -171,7 +171,7 @@ export const createPicker = (
   };
 
   let reading = false;
-  const postFrame = async () => {
+  const update = async () => {
     if (!pending || reading) return;
     reading = true;
     const result = await read();
@@ -179,6 +179,8 @@ export const createPicker = (
     pending.resolve(result);
     pending = undefined;
   };
+
+  const postFrame = () => void update();
 
   return {
     pick,

@@ -113,11 +113,8 @@ const createStructItemFactory = <S extends StructFields>(
 
   return (baseOffset = 0): StructView<S> => {
     const item = {} as StructView<S>;
-    for (const {
-      k,
-      value: { write, size },
-      offset,
-    } of entries) {
+    for (const { k, value, offset } of entries) {
+      const { write, size } = value;
       const abs = baseOffset + offset;
       Object.defineProperty(item, k, {
         enumerable: true,
@@ -266,10 +263,11 @@ const createValueBuffer = <T>(
   shape: Value<T>,
   store: BackingStore,
 ): ValueBuffer<T> => {
+  const { buffer, flush } = store;
   const result = {
     value: undefined!,
-    buffer: store.buffer,
-    flush: store.flush,
+    buffer,
+    flush,
   };
   defineValueProperty(result, shape, store);
   return result;
@@ -298,11 +296,12 @@ export function buffer(
   | ValueBuffer<unknown>
   | ShapeBuffer<Struct<StructFields> | ArrayShape<ElementShape>> {
   if (shape.kind === "array") {
-    const result = createArrayView(shape, device, options);
+    const value = createArrayView(shape, device, options);
+    const { buffer, flush } = value;
     return {
-      value: result,
-      buffer: result.buffer,
-      flush: result.flush,
+      value,
+      buffer,
+      flush,
     };
   }
 
@@ -310,10 +309,11 @@ export function buffer(
 
   if (shape.kind === "value") return createValueBuffer(shape, store);
 
+  const { buffer, flush } = store;
   return {
     value: createStructItemFactory(shape, store)(),
-    buffer: store.buffer,
-    flush: store.flush,
+    buffer,
+    flush,
   };
 }
 
@@ -350,7 +350,15 @@ const createArrayCore = <TItem>(
     while (items.length < count) installItem(items, items.length);
   };
 
-  return { stride, items, buffer: store.buffer, resize, flush: store.flush };
+  const { buffer, flush } = store;
+
+  return {
+    stride,
+    items,
+    buffer,
+    resize,
+    flush,
+  };
 };
 
 const createValueArrayView = <T>(
@@ -460,19 +468,17 @@ export const createSlotAllocator = <S extends StructFields>(
     store.ensureCapacity(liveCount * stride);
 
     const item = {} as StructView<S>;
-    for (const {
-      k,
-      value: { write, size },
-      offset,
-    } of entries)
+    for (const { k, value, offset } of entries) {
+      const { write, size } = value;
       Object.defineProperty(item, k, {
         enumerable: true,
-        set(value: unknown) {
+        set(next: unknown) {
           const abs = getSlot() * stride + offset;
-          write(store.view(), abs, value);
+          write(store.view(), abs, next);
           store.markDirty(abs, abs + size);
         },
       });
+    }
 
     const release = () => {
       const slot = getSlot();
@@ -506,5 +512,12 @@ export const createSlotAllocator = <S extends StructFields>(
     return [item, release];
   };
 
-  return { count, buffer: store.buffer, allocate, flush: store.flush };
+  const { buffer, flush } = store;
+
+  return {
+    count,
+    buffer,
+    allocate,
+    flush,
+  };
 };
