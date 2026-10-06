@@ -18,6 +18,9 @@ export const createContext = async (element: HTMLCanvasElement) => {
     requiredLimits: { maxTextureArrayLayers: tileTextureLayers },
   });
 
+  const context = element.getContext("webgpu");
+  if (!context) throw new Error("No WebGPU");
+
   const devicePixelRatio = window.devicePixelRatio || 1;
   const { width, height } = element;
   const [size, setSize] = signal<Vec2>([width, height]);
@@ -29,9 +32,6 @@ export const createContext = async (element: HTMLCanvasElement) => {
     setSize([width, height]);
   });
   observer.observe(element);
-
-  const context = element.getContext("webgpu");
-  if (!context) throw new Error();
 
   const format = gpu.getPreferredCanvasFormat();
   context.configure({ device, format, alphaMode: "opaque" });
