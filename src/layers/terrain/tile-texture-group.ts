@@ -89,13 +89,15 @@ export const createTileTextureGroup = ({
       }),
     );
 
-  const ensure = (tiles: Vec3[]) =>
+  const ensure = (tiles: Vec3[]) => {
+    tiles = unique(
+      tiles.map(_ => downsample(_, initialDownsample)).filter(_ => !!_),
+    );
     textureGroup.ensure(
-      unique(
-        descendants(
-          tiles.map(_ => downsample(_, initialDownsample)).filter(_ => !!_),
-        ),
-      )
+      unique([
+      ...tiles,
+      ...descendants(parents(tiles)),
+    ])
         .filter(([, , z]) => z <= maxZ)
         .map(xyz => {
           const key = toKey(xyz).toString();
@@ -103,6 +105,7 @@ export const createTileTextureGroup = ({
           return key;
         }),
     );
+  };
 
   return { ensure, texture };
 };
