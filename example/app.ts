@@ -263,7 +263,7 @@ export const createApp = () =>
           onDrag: (event: PickEvent) => updatePosition(event.position),
         };
       },
-      { key: _ => _.id },
+      _ => _.id,
     );
 
     const layers = $(() => [

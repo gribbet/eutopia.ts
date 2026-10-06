@@ -1,11 +1,5 @@
-import {
-  effect,
-  map,
-  type Properties,
-  properties,
-  resolve,
-  signal,
-} from "signaloits";
+import type { Properties } from "signaloits";
+import { effect, map, resolve, signal } from "signaloits";
 
 import { createLayer, createLayerType } from "../common";
 import type { Vec3, Vec4 } from "../model";
@@ -26,14 +20,14 @@ export type TextEntry = PickHandlers & {
 };
 
 export type TextProps = CommonLayerProps & {
-  entries: Properties<TextEntry>[];
+  entries: readonly Properties<TextEntry>[];
 };
 
 export const text = createLayerType<TextProps>(
   (context, { entries, ...props }) => {
     const billboards = map(entries, entry => {
       const [image, setImage] = signal<string>("");
-      const { text, font, fontSize, ...rest } = properties(entry);
+      const { text, font, fontSize, ...rest } = resolve(entry);
       effect(() => {
         const textValue = resolve(text);
         if (!textValue) return;

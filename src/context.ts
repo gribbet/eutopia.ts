@@ -1,4 +1,4 @@
-import { onCleanup, signal } from "signaloits";
+import { defer, signal } from "signaloits";
 
 import { tileTextureLayers } from "./configuration";
 import type { Vec2 } from "./model";
@@ -40,7 +40,7 @@ export const createContext = async (element: HTMLCanvasElement) => {
   const textureLoader = createTextureLoader({ device });
   const pickRegistry = createPickRegistry();
 
-  onCleanup(() => {
+  defer(() => {
     observer.disconnect();
     device.destroy();
   });

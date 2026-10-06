@@ -1,13 +1,5 @@
-import {
-  $,
-  effect,
-  map,
-  onCleanup,
-  type Properties,
-  properties,
-  resolve,
-  signal,
-} from "signaloits";
+import type { Properties } from "signaloits";
+import { $, defer, effect, map, resolve, signal } from "signaloits";
 
 import { createDataBuffer } from "../buffer";
 import { createLayerType } from "../common";
@@ -46,7 +38,7 @@ export type Instance = PickHandlers & {
 
 export type ObjectProps = CommonLayerProps & {
   mesh: Mesh;
-  instances: Properties<Instance>[];
+  instances: readonly Properties<Instance>[];
 };
 
 export const object = createLayerType<ObjectProps>(
@@ -168,7 +160,7 @@ export const object = createLayerType<ObjectProps>(
 
     map(instances, instance => {
       const [item, release] = slots.allocate();
-      onCleanup(release);
+      defer(release);
 
       const {
         position,
@@ -180,7 +172,7 @@ export const object = createLayerType<ObjectProps>(
         diffuse,
         outline,
         ...rest
-      } = properties(instance);
+      } = resolve(instance);
 
       const pickId = pickRegistry.allocate(rest);
       effect(() => {

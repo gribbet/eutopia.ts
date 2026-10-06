@@ -33,6 +33,6 @@
     "wgpu-matrix": "^3.4.2"
   },
   "peerDependencies": {
-    "signaloits": "^1.0.0"
+    "signaloits": "^2.0.2"
   }
 }

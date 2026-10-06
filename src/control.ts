@@ -1,4 +1,4 @@
-import { onCleanup, type Signal } from "signaloits";
+import { defer, type Signal } from "signaloits";
 
 import { debounce } from "./common";
 import { enuFromPosition, move, wrapDegDelta } from "./math";
@@ -126,5 +126,5 @@ export const createControl = ({
     signal,
   });
 
-  onCleanup(() => abortController.abort());
+  defer(() => abortController.abort());
 };

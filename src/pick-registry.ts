@@ -1,4 +1,5 @@
-import { $, onCleanup, type Properties, resolve, signal } from "signaloits";
+import type { Properties } from "signaloits";
+import { $, defer, resolve, signal } from "signaloits";
 
 import type { Vec3, Vec4 } from "./model";
 
@@ -37,10 +38,10 @@ export const createPickRegistry = () => {
   const handlers = new Map<number, Properties<PickHandlers>>();
   const [draggingId, setDraggingId] = signal(0);
 
-  const allocate = (entry: Properties<PickHandlers> = {}) => {
+  const allocate = (entry: Properties<PickHandlers>) => {
     const id = freeList.length > 0 ? freeList.pop()! : nextId++;
     handlers.set(id, entry);
-    onCleanup(() => {
+    defer(() => {
       handlers.delete(id);
       freeList.push(id);
     });

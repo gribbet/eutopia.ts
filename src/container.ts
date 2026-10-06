@@ -1,12 +1,5 @@
-import {
-  $,
-  effect,
-  map,
-  onCleanup,
-  type Properties,
-  resolve,
-  signal,
-} from "signaloits";
+import type { Properties } from "signaloits";
+import { $, defer, effect, map, resolve, signal } from "signaloits";
 
 import {
   createLayerType,
@@ -51,7 +44,7 @@ export const createContainerLayer = (
 ): Layer => {
   const groups = new Map<object, Cell[]>();
 
-  onCleanup(() => groups.clear());
+  defer(() => groups.clear());
 
   const stableList = $(() => {
     const next = resolve(layers);
@@ -84,7 +77,7 @@ export const createContainerLayer = (
   effect(() => {
     const list = items();
     let current = true;
-    onCleanup(() => {
+    defer(() => {
       current = false;
     });
 

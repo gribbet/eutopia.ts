@@ -1,13 +1,5 @@
-import {
-  $,
-  effect,
-  map,
-  onCleanup,
-  type Properties,
-  properties,
-  resolve,
-  signal,
-} from "signaloits";
+import type { Properties } from "signaloits";
+import { $, defer, effect, map, resolve, signal } from "signaloits";
 
 import { createLayerType } from "../common";
 import { loadImage } from "../image-load";
@@ -36,7 +28,7 @@ export type Billboard = PickHandlers & {
 };
 
 export type BillboardProps = CommonLayerProps & {
-  billboards: Properties<Billboard>[];
+  billboards: readonly Properties<Billboard>[];
 };
 
 export const billboard = createLayerType<BillboardProps>(
@@ -140,7 +132,7 @@ export const billboard = createLayerType<BillboardProps>(
 
     map(billboards, billboard => {
       const [item, release] = slots.allocate();
-      onCleanup(release);
+      defer(release);
 
       const {
         image,
@@ -152,7 +144,7 @@ export const billboard = createLayerType<BillboardProps>(
         maxScale,
         outline,
         ...rest
-      } = properties(billboard);
+      } = resolve(billboard);
 
       const metadata = $(() => imageMetadata()[resolve(image)]);
       const pickId = pickRegistry.allocate(rest);

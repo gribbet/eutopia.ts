@@ -1,4 +1,5 @@
-import { effect, onCleanup, type Properties, resolve } from "signaloits";
+import type { Properties } from "signaloits";
+import { defer, effect, resolve } from "signaloits";
 import { mat4 } from "wgpu-matrix";
 
 import { createLayer, type LayerDescriptor, viewLayout } from "./common";
@@ -110,7 +111,7 @@ export const createWorld = async (
   };
   requestAnimationFrame(frame);
 
-  onCleanup(() => {
+  defer(() => {
     running = false;
   });
 

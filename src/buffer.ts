@@ -1,4 +1,4 @@
-import { onCleanup, signal } from "signaloits";
+import { defer, signal } from "signaloits";
 
 export const createBuffer = (
   device: GPUDevice,
@@ -6,7 +6,7 @@ export const createBuffer = (
   { cleanup = true }: { cleanup?: boolean } = {},
 ): GPUBuffer => {
   const buffer = device.createBuffer(descriptor);
-  if (cleanup) onCleanup(() => buffer.destroy());
+  if (cleanup) defer(() => buffer.destroy());
   return buffer;
 };
 
@@ -49,7 +49,7 @@ export const createResizableBuffer = (
     setBuffer(buffer);
   };
 
-  onCleanup(() => buffer.destroy());
+  defer(() => buffer.destroy());
 
   return {
     buffer: accessor,

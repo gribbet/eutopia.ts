@@ -1,4 +1,4 @@
-import { onCleanup, signal } from "signaloits";
+import { defer, signal } from "signaloits";
 
 import { mipLevelCount, tileTextureLayers } from "./configuration";
 import type { Context } from "./context";
@@ -164,7 +164,7 @@ export const createTextureGroup = ({
     void doLoad(key, index, signal);
   };
 
-  onCleanup(() => {
+  defer(() => {
     mapping.clear();
   });
 

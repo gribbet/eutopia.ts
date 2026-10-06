@@ -1,5 +1,5 @@
 import type { MaybeSignal } from "signaloits";
-import { onCleanup, resolve, signal as createSignal } from "signaloits";
+import { defer, resolve, signal as createSignal } from "signaloits";
 
 import { pickFlat } from "./math";
 import type { Vec2, View } from "./model";
@@ -211,7 +211,7 @@ export const createMouse = ({
     signal,
   });
 
-  onCleanup(() => {
+  defer(() => {
     abortController.abort();
     pendingMoves.clear();
     if (moveFrame) cancelAnimationFrame(moveFrame);
