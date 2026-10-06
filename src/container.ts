@@ -10,7 +10,7 @@ import {
 import type { Context } from "./context";
 
 export type ContainerProperties = {
-  layers: LayerDescriptor[];
+  layers: readonly LayerDescriptor[];
 };
 
 type Cell = {
