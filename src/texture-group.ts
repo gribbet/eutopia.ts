@@ -28,7 +28,10 @@ export const createTextureGroup = ({
     createTexture(device, {
       size: [width, height, layers],
       format: "rgba8unorm",
-      mipLevelCount: Math.min(mipLevelCount, Math.floor(Math.log2(Math.max(width, height))) + 1),
+      mipLevelCount: Math.min(
+        mipLevelCount,
+        Math.floor(Math.log2(Math.max(width, height))) + 1,
+      ),
       usage:
         GPUTextureUsage.TEXTURE_BINDING |
         GPUTextureUsage.COPY_DST |

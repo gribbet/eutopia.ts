@@ -1,7 +1,7 @@
 import type { Properties } from "signaloits";
 import { effect, map, resolve, signal } from "signaloits";
 
-import { createLayer, createLayerType } from "../common";
+import { createLatest, createLayer, createLayerType } from "../common";
 import type { Vec3, Vec4 } from "../model";
 import { type PickHandlers } from "../pick-registry";
 import { billboard } from "./billboard";
@@ -28,15 +28,13 @@ export const text = createLayerType<TextProps>(
     const billboards = map(entries, entry => {
       const [image, setImage] = signal<string>("");
       const { text, font, fontSize, ...rest } = resolve(entry);
+      const createTextImage_ = createLatest(createTextImage);
       effect(() => {
-        const textValue = resolve(text);
-        if (!textValue) return;
-
-        void createTextImage({
-          text: textValue,
+        void createTextImage_({
+          text: resolve(text),
           font: resolve(font),
           fontSize: resolve(fontSize),
-        }).then(setImage);
+        }).then(_ => _ !== undefined && setImage(_));
       });
 
       return { ...rest, image };

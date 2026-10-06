@@ -15,6 +15,8 @@ export const createTextImage = ({
   font: string;
   fontSize: number;
 }) => {
+  if (!text) return Promise.resolve("");
+
   const key = [text, font, fontSize].join("-");
 
   const cached = lru.get(key);

@@ -1,6 +1,6 @@
 import { defer, type Signal } from "signaloits";
 
-import { debounce } from "./common";
+import { createLatest, debounce } from "./common";
 import { enuFromPosition, move, wrapDegDelta } from "./math";
 import type { View } from "./model";
 import type { World } from "./world";
@@ -20,10 +20,12 @@ export const createControl = ({
 }) => {
   const abortController = new AbortController();
   const { signal } = abortController;
+  const pick = createLatest(world.pick);
 
   const recenter = async () => {
     const { width, height } = element.getBoundingClientRect();
-    const { position } = await world.pick([width / 2, height / 2]);
+    const { position } = (await pick([width / 2, height / 2])) ?? {};
+    if (position === undefined) return;
 
     const { center, distance, orientation, fieldOfView } = view();
     const [yaw, pitch] = orientation;

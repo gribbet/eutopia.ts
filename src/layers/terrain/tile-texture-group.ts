@@ -7,7 +7,6 @@ import { createTextureGroup } from "../../texture-group";
 import { toKey } from "./common";
 import type { TileMapBuffer } from "./tile-map-buffer";
 
-
 export const createTileTextureGroup = ({
   context,
   map,

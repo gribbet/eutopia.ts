@@ -2,6 +2,7 @@ import type { Properties } from "signaloits";
 import { $, defer, effect, map, resolve, signal } from "signaloits";
 
 import {
+  createLatest,
   createLayerType,
   type Layer,
   type LayerDescriptor,
@@ -72,18 +73,14 @@ export const createContainerLayer = (
 
   const [active, setActive] = signal<Layer[]>([]);
 
+  const activate = createLatest((list: readonly (Layer | Promise<Layer>)[]) =>
+    Promise.all(list.map(_ => Promise.resolve(_))),
+  );
+
   const items = map(stableList, _ => _().create());
 
   effect(() => {
-    const list = items();
-    let current = true;
-    defer(() => {
-      current = false;
-    });
-
-    void Promise.all(list.map(_ => Promise.resolve(_))).then(resolved => {
-      if (current) setActive(resolved);
-    });
+    void activate(items()).then(_ => _ !== undefined && setActive(_));
   });
 
   const compute = (pass: GPUComputePassEncoder) =>

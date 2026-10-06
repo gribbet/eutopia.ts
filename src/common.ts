@@ -58,6 +58,18 @@ export const limit = (n: number) => {
   };
 };
 
+export const createLatest = <Arguments extends unknown[], Return>(
+  fn: (...args: Arguments) => Promise<Return>,
+) => {
+  let token = {};
+  return async (...args: Arguments): Promise<Return | undefined> => {
+    const current = {};
+    token = current;
+    const result = await fn(...args);
+    return token === current ? result : undefined;
+  };
+};
+
 export const debounce = (callback: () => void, delay: number) => {
   let timeout: ReturnType<typeof setTimeout> | undefined;
   return () => {
