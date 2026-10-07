@@ -5,7 +5,7 @@
 @group(1) @binding(4) var<storage, read> elevation_map: array<MapEntry>;
 @group(1) @binding(5) var elevation_textures: texture_2d_array<f32>;
 
-const SUBDIVIDE_PIXEL_THRESHOLD = 512.0;
+const SUBDIVIDE_PIXEL_THRESHOLD = 384.0;
 
 fn tile_elevation(tile: vec3<u32>) -> f32 {
     let size = arrayLength(&elevation_cache);
