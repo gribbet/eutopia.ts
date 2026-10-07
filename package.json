@@ -17,7 +17,7 @@
   "scripts": {
     "build": "npm run clean && tsc --project tsconfig.json && npm run copy:assets",
     "clean": "rm -rf dist",
-    "copy:assets": "cpy '**/*.wgsl' '../dist' --cwd=src",
+    "copy:assets": "cpx \"src/**/*.wgsl\" dist",
     "fmt": "vp fmt",
     "lint": "vp lint",
     "check": "vp check",
@@ -27,13 +27,13 @@
     "wgpu-matrix": "^3.4.2"
   },
   "devDependencies": {
-    "@gribbet/vite-config": "^1.0.0",
+    "@gribbet/vite-config": "^1.0.1",
     "@webgpu/types": "^0.1.74",
-    "cpy-cli": "^7.0.0",
+    "cpx2": "^9.0.3",
     "typescript": "^7.0.2",
-    "vite-plus": "^1.0.0"
+    "vite-plus": "^1.1.0"
   },
   "peerDependencies": {
-    "signaloits": "^2.0.3"
+    "signaloits": "^2.0.5"
   }
 }
