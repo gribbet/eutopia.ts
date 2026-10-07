@@ -1,7 +1,6 @@
-import { config } from "@gribbet/vite-config";
-import { mergeConfig } from "vite-plus";
+import { defineConfig } from "@gribbet/vite-config";
 
-export default mergeConfig(config, {
+export default defineConfig({
   lint: {
     rules: {
       "typescript/unbound-method": "off",
