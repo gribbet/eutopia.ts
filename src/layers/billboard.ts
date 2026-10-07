@@ -1,7 +1,7 @@
 import type { Properties } from "signaloits";
 import { $, defer, effect, map, resolve, signal } from "signaloits";
 
-import { createLayerType } from "../common";
+import { createLayerType, loadShader } from "../common";
 import { loadImage } from "../image-load";
 import type { Vec2, Vec3, Vec4 } from "../model";
 import type { PickHandlers } from "../pick-registry";
@@ -32,7 +32,7 @@ export type BillboardProps = CommonLayerProps & {
 };
 
 export const billboard = createLayerType<BillboardProps>(
-  async (context, { billboards, depth, polygonOffset }) => {
+  (context, { billboards, depth, polygonOffset }) => {
     const { device, pickRegistry } = context;
 
     const slots = createSlotAllocator(
@@ -76,9 +76,7 @@ export const billboard = createLayerType<BillboardProps>(
       },
     });
 
-    const code = await (
-      await fetch(new URL("./billboard.wgsl", import.meta.url))
-    ).text();
+    const shader = loadShader(new URL("./billboard.wgsl", import.meta.url));
 
     const bindGroupLayout = device.createBindGroupLayout({
       entries: [
@@ -118,9 +116,9 @@ export const billboard = createLayerType<BillboardProps>(
       }),
     );
 
-    const { render, pick } = await createLayerRenderer({
+    const { render, pick } = createLayerRenderer({
       context,
-      code,
+      shader,
       topology: "triangle-strip",
       bindGroupLayout,
       depth,

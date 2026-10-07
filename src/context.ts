@@ -1,25 +1,22 @@
 import { defer, signal } from "signaloits";
 
-import { tileTextureLayers } from "./configuration";
 import type { Vec2 } from "./model";
 import { createPickRegistry } from "./pick-registry";
 import { createTextureLoader } from "./texture-loader";
 
 export type Context = Awaited<ReturnType<typeof createContext>>;
 
-export const createContext = async (element: HTMLCanvasElement) => {
+export const createContext = (
+  element: HTMLCanvasElement,
+  device: GPUDevice,
+) => {
   const sampleCount = 4;
-
-  const { gpu } = navigator;
-  const adapter = await gpu.requestAdapter();
-  if (!adapter) throw new Error("No WebGPU adapter found");
-
-  const device = await adapter.requestDevice({
-    requiredLimits: { maxTextureArrayLayers: tileTextureLayers },
-  });
 
   const context = element.getContext("webgpu");
   if (!context) throw new Error("No WebGPU");
+
+  const format = navigator.gpu.getPreferredCanvasFormat();
+  context.configure({ device, format, alphaMode: "opaque" });
 
   const devicePixelRatio = window.devicePixelRatio || 1;
   const { width, height } = element;
@@ -32,20 +29,12 @@ export const createContext = async (element: HTMLCanvasElement) => {
     setSize([width, height]);
   });
   observer.observe(element);
-
-  const format = gpu.getPreferredCanvasFormat();
-  context.configure({ device, format, alphaMode: "opaque" });
+  defer(() => observer.disconnect());
 
   const textureLoader = createTextureLoader({ device });
   const pickRegistry = createPickRegistry();
 
-  defer(() => {
-    observer.disconnect();
-    device.destroy();
-  });
-
   return {
-    element,
     device,
     context,
     format,

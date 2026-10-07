@@ -1,7 +1,7 @@
 import type { Properties, Signal } from "signaloits";
 import { $, resolve } from "signaloits";
 
-import { viewLayout } from "../common";
+import { loadShader, viewLayout } from "../common";
 import type { Context } from "../context";
 
 export type CommonLayerProps = {
@@ -9,9 +9,9 @@ export type CommonLayerProps = {
   polygonOffset?: number;
 };
 
-export const createLayerRenderer = async ({
+export const createLayerRenderer = ({
   context,
-  code,
+  shader,
   topology = "triangle-list",
   bindGroupLayout,
   buffers,
@@ -22,7 +22,7 @@ export const createLayerRenderer = async ({
   draw,
 }: {
   context: Context;
-  code: string;
+  shader: Signal<string | undefined>;
   topology?: GPUPrimitiveTopology;
   bindGroupLayout: GPUBindGroupLayout;
   buffers?: GPUVertexBufferLayout[];
@@ -32,23 +32,11 @@ export const createLayerRenderer = async ({
 } & Pick<Properties<CommonLayerProps>, "depth" | "polygonOffset">) => {
   const { device, format, sampleCount } = context;
 
-  const common = await (
-    await fetch(new URL("./common.wgsl", import.meta.url))
-  ).text();
-
-  const module = device.createShaderModule({
-    code: common + code,
-  });
+  const commonShader = loadShader(new URL("./common.wgsl", import.meta.url));
 
   const pipelineLayout = device.createPipelineLayout({
     bindGroupLayouts: [viewLayout(device), bindGroupLayout],
   });
-
-  const base = {
-    layout: pipelineLayout,
-    vertex: { module, entryPoint: "vertex", buffers },
-    primitive: { topology },
-  };
 
   const alphaBlend: GPUBlendState = {
     color: {
@@ -68,12 +56,23 @@ export const createLayerRenderer = async ({
     } satisfies GPUDepthStencilState;
   });
 
-  const pipeline = $(() =>
-    device.createRenderPipeline({
-      ...base,
+  const module = $(() => {
+    const commonCode = commonShader();
+    const code = shader();
+    if (commonCode === undefined || code === undefined) return undefined;
+    return device.createShaderModule({ code: commonCode + code });
+  });
+
+  const pipeline = $(() => {
+    const module_ = module();
+    if (!module_) return undefined;
+    return device.createRenderPipeline({
+      layout: pipelineLayout,
+      vertex: { module: module_, entryPoint: "vertex", buffers },
+      primitive: { topology },
       depthStencil: depthStencil(),
       fragment: {
-        module,
+        module: module_,
         entryPoint: "render",
         constants,
         targets: [
@@ -88,15 +87,19 @@ export const createLayerRenderer = async ({
         ],
       },
       multisample: { count: sampleCount },
-    }),
-  );
+    });
+  });
 
-  const pickPipeline = $(() =>
-    device.createRenderPipeline({
-      ...base,
+  const pickPipeline = $(() => {
+    const module_ = module();
+    if (!module_) return;
+    return device.createRenderPipeline({
+      layout: pipelineLayout,
+      vertex: { module: module_, entryPoint: "vertex", buffers },
+      primitive: { topology },
       depthStencil: { ...depthStencil(), depthWriteEnabled: true },
       fragment: {
-        module,
+        module: module_,
         entryPoint: "pick",
         targets: [
           { format: "rg32uint" },
@@ -105,12 +108,15 @@ export const createLayerRenderer = async ({
         ],
       },
       multisample: { count: 1 },
-    }),
-  );
+    });
+  });
 
   const execute =
-    (pipeline: Signal<GPURenderPipeline>) => (pass: GPURenderPassEncoder) => {
-      pass.setPipeline(pipeline());
+    (pipeline: Signal<GPURenderPipeline | undefined>) =>
+    (pass: GPURenderPassEncoder) => {
+      const pipeline_ = pipeline();
+      if (!pipeline_) return;
+      pass.setPipeline(pipeline_);
       pass.setBindGroup(1, bindGroup());
       draw(pass);
     };

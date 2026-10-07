@@ -1,30 +1,35 @@
-import type { Properties } from "signaloits";
+import type { MaybeSignal } from "signaloits";
 import { defer, effect, resolve } from "signaloits";
 import { mat4 } from "wgpu-matrix";
 
 import { createLayer, type LayerDescriptor, viewLayout } from "./common";
 import { container } from "./container";
-import type { Context } from "./context";
+import { createContext } from "./context";
 import type { View } from "./model";
 import { createMouse } from "./mouse";
 import { createPicker } from "./picker";
 import { createRenderer } from "./renderer";
 import { buffer, f32, mat4f, position, struct, vec2f } from "./storage";
 
-export type World = Awaited<ReturnType<typeof createWorld>>;
+export type World = ReturnType<typeof createWorld>;
 
 export type WorldProperties = {
-  view: View;
-  layers: LayerDescriptor[];
+  element: HTMLCanvasElement;
+  device: GPUDevice;
+  view: MaybeSignal<View>;
+  layers: MaybeSignal<readonly LayerDescriptor[]>;
 };
 
-export const createWorld = async (
-  context: Context,
-  { view, layers }: Properties<WorldProperties>,
-) => {
-  const { device, size, textureLoader, element, pickRegistry } = context;
+export const createWorld = ({
+  element,
+  device,
+  view,
+  layers,
+}: WorldProperties) => {
+  const context = createContext(element, device);
+  const { size, textureLoader, pickRegistry } = context;
 
-  const renderer = await createRenderer(context);
+  const renderer = createRenderer(context);
   const picker = createPicker(context);
   const { pick } = picker;
 
@@ -72,7 +77,7 @@ export const createWorld = async (
     viewUniform.value.distance = distance;
   });
 
-  const root = await createLayer(context, container({ layers }));
+  const root = createLayer(context, container({ layers }));
 
   const { isDragging } = createMouse({ element, pick, pickRegistry, view });
 

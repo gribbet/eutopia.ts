@@ -1,6 +1,6 @@
 import { $, effect, resolve } from "signaloits";
 
-import { createLayerType } from "../../common";
+import { createLayerType, loadShader } from "../../common";
 import type { Vec3, Vec4 } from "../../model";
 import type { PickHandlers } from "../../pick-registry";
 import {
@@ -27,7 +27,7 @@ export type LineProps = PickHandlers &
     vertices: Vertex[][];
   };
 
-export const line = createLayerType<LineProps>(async (context, props) => {
+export const line = createLayerType<LineProps>((context, props) => {
   const { vertices, depth, polygonOffset } = props;
   const { device, pickRegistry } = context;
 
@@ -51,9 +51,7 @@ export const line = createLayerType<LineProps>(async (context, props) => {
     },
   );
 
-  const code = await (
-    await fetch(new URL("./render.wgsl", import.meta.url))
-  ).text();
+  const shader = loadShader(new URL("./render.wgsl", import.meta.url));
 
   const bindGroupLayout = device.createBindGroupLayout({
     entries: [
@@ -72,10 +70,10 @@ export const line = createLayerType<LineProps>(async (context, props) => {
     }),
   );
 
-  const { render, pick } = await createLayerRenderer({
+  const { render, pick } = createLayerRenderer({
     context,
     bindGroupLayout,
-    code,
+    shader,
     depth,
     polygonOffset,
     bindGroup,

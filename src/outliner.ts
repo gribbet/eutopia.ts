@@ -1,5 +1,6 @@
 import { $ } from "signaloits";
 
+import { loadShader } from "./common";
 import type { Context } from "./context";
 import { createTexture } from "./texture";
 
@@ -7,7 +8,7 @@ const outlineTextureFormat: GPUTextureFormat = "rgba8unorm";
 
 type TextureSize = () => readonly [number, number];
 
-export const createOutliner = async ({
+export const createOutliner = ({
   context,
   textureSize,
   sceneTexture,
@@ -17,9 +18,7 @@ export const createOutliner = async ({
   sceneTexture: () => GPUTexture;
 }) => {
   const { device, devicePixelRatio, format, sampleCount } = context;
-  const code = await (
-    await fetch(new URL("./outliner.wgsl", import.meta.url))
-  ).text();
+  const shader = loadShader(new URL("./outliner.wgsl", import.meta.url));
 
   const outlineTexture = $(() =>
     createTexture(device, {
@@ -39,7 +38,6 @@ export const createOutliner = async ({
     }),
   );
 
-  const module = device.createShaderModule({ code });
   const bindGroupLayout = device.createBindGroupLayout({
     entries: [
       {
@@ -67,17 +65,22 @@ export const createOutliner = async ({
     minFilter: "linear",
   });
 
-  const pipeline = device.createRenderPipeline({
-    layout: device.createPipelineLayout({
-      bindGroupLayouts: [bindGroupLayout],
-    }),
-    vertex: { module, entryPoint: "vertex" },
-    fragment: {
-      module,
-      entryPoint: "fragment",
-      constants: { ["device_pixel_ratio"]: devicePixelRatio },
-      targets: [{ format }],
-    },
+  const pipeline = $(() => {
+    const code = shader();
+    if (code === undefined) return undefined;
+    const module = device.createShaderModule({ code });
+    return device.createRenderPipeline({
+      layout: device.createPipelineLayout({
+        bindGroupLayouts: [bindGroupLayout],
+      }),
+      vertex: { module, entryPoint: "vertex" },
+      fragment: {
+        module,
+        entryPoint: "fragment",
+        constants: { ["device_pixel_ratio"]: devicePixelRatio },
+        targets: [{ format }],
+      },
+    });
   });
 
   const bindGroup = $(() =>
@@ -100,6 +103,8 @@ export const createOutliner = async ({
   });
 
   const render = (encoder: GPUCommandEncoder) => {
+    const pipeline_ = pipeline();
+    if (!pipeline_) return;
     const pass = encoder.beginRenderPass({
       colorAttachments: [
         {
@@ -109,7 +114,7 @@ export const createOutliner = async ({
         },
       ],
     });
-    pass.setPipeline(pipeline);
+    pass.setPipeline(pipeline_);
     pass.setBindGroup(0, bindGroup());
     pass.draw(3);
     pass.end();

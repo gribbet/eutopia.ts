@@ -1,12 +1,13 @@
 import { $, effect } from "signaloits";
 
 import { createDataBuffer } from "../../buffer";
+import { loadShader } from "../../common";
 import type { Context } from "../../context";
 import type { Vec4 } from "../../model";
 import { buffer, u32, vec4f } from "../../storage";
 import { type CommonLayerProps, createLayerRenderer } from "../common";
 
-export const createRenderPipeline = async ({
+export const createRenderPipeline = ({
   context,
   tilesBuffer,
   countBuffer,
@@ -28,9 +29,7 @@ export const createRenderPipeline = async ({
   polygonOffset?: CommonLayerProps["polygonOffset"];
 }) => {
   const { device, devicePixelRatio } = context;
-  const code = await (
-    await fetch(new URL("./render.wgsl", import.meta.url))
-  ).text();
+  const shader = loadShader(new URL("./render.wgsl", import.meta.url));
 
   const bindGroupLayout = device.createBindGroupLayout({
     entries: [
@@ -138,7 +137,7 @@ export const createRenderPipeline = async ({
     }),
   );
 
-  const { render, pick } = await createLayerRenderer({
+  const { render, pick } = createLayerRenderer({
     context,
     bindGroupLayout,
     buffers: [
@@ -148,7 +147,7 @@ export const createRenderPipeline = async ({
       },
     ],
     topology: "triangle-list",
-    code,
+    shader,
     constants: { ["device_pixel_ratio"]: devicePixelRatio },
     depth,
     polygonOffset,

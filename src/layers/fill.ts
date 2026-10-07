@@ -1,6 +1,6 @@
 import { $, effect, resolve } from "signaloits";
 
-import { createLayerType } from "../common";
+import { createLayerType, loadShader } from "../common";
 import type { Vec3, Vec4 } from "../model";
 import type { PickHandlers } from "../pick-registry";
 import { array, buffer, position, struct, u32, vec4f } from "../storage";
@@ -17,7 +17,7 @@ export type FillProps = PickHandlers &
     indices: number[];
   };
 
-export const fill = createLayerType<FillProps>(async (context, props) => {
+export const fill = createLayerType<FillProps>((context, props) => {
   const { vertices, indices, depth, polygonOffset, outline } = props;
   const { device, pickRegistry } = context;
 
@@ -41,9 +41,7 @@ export const fill = createLayerType<FillProps>(async (context, props) => {
     initialCapacity: 1024,
   });
 
-  const code = await (
-    await fetch(new URL("./fill.wgsl", import.meta.url))
-  ).text();
+  const shader = loadShader(new URL("./fill.wgsl", import.meta.url));
 
   const bindGroupLayout = device.createBindGroupLayout({
     entries: [
@@ -62,10 +60,10 @@ export const fill = createLayerType<FillProps>(async (context, props) => {
     }),
   );
 
-  const { render, pick } = await createLayerRenderer({
+  const { render, pick } = createLayerRenderer({
     context,
     bindGroupLayout,
-    code,
+    shader,
     depth,
     polygonOffset,
     bindGroup,

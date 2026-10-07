@@ -6,7 +6,7 @@ import { createTexture } from "./texture";
 
 type Renderer = (pass: GPURenderPassEncoder) => void;
 
-export const createRenderer = async (context: Context) => {
+export const createRenderer = (context: Context) => {
   const { device, size, devicePixelRatio, format, sampleCount } = context;
 
   const textureSize = $(() => {
@@ -45,7 +45,7 @@ export const createRenderer = async (context: Context) => {
   const sceneView = () => sceneTexture().createView();
   const depthView = () => depthTexture().createView();
 
-  const outliner = await createOutliner({ context, textureSize, sceneTexture });
+  const outliner = createOutliner({ context, textureSize, sceneTexture });
 
   const render = (encoder: GPUCommandEncoder, draw: Renderer) => {
     const pass = encoder.beginRenderPass({

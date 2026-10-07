@@ -16,7 +16,7 @@ export type TerrainProps = PickHandlers &
     elevationUrl: string;
   };
 
-export const terrain = createLayerType<TerrainProps>(async (context, props) => {
+export const terrain = createLayerType<TerrainProps>((context, props) => {
   const { imageryUrl, elevationUrl, depth, polygonOffset, outline } = props;
   const { device, pickRegistry } = context;
 
@@ -60,7 +60,7 @@ export const terrain = createLayerType<TerrainProps>(async (context, props) => {
 
   const pickId = pickRegistry.allocate(props);
 
-  const computePipeline = await createComputePipeline({
+  const computePipeline = createComputePipeline({
     device,
     tilesBuffer,
     countBuffer,
@@ -69,7 +69,7 @@ export const terrain = createLayerType<TerrainProps>(async (context, props) => {
     elevationTextures,
   });
 
-  const renderPipeline = await createRenderPipeline({
+  const renderPipeline = createRenderPipeline({
     context,
     tilesBuffer,
     countBuffer,

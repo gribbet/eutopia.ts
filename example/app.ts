@@ -1,6 +1,5 @@
 import {
   $,
-  createContext,
   createControl,
   createWorld,
   fill,
@@ -19,6 +18,7 @@ import {
   vec4Transition,
   type Vertex as MeshVertex,
   type View,
+  createDevice,
 } from "eutopia.ts";
 
 const createCubeMesh = (): Mesh => {
@@ -120,12 +120,12 @@ const mapboxToken =
 const elevationUrl = `https://api.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.png?access_token=${mapboxToken}`;
 const outline: Vec4 = [0, 0, 0, 1];
 
+const device = await createDevice();
+
 export const createApp = () =>
-  root(async dispose => {
+  root(dispose => {
     const element = document.createElement("canvas");
     document.body.appendChild(element);
-
-    const context = await createContext(element);
 
     const [view, setView] = signal<View>({
       center: [-122.4194, 37.7749, 0],
@@ -296,7 +296,9 @@ export const createApp = () =>
       }),
     ]);
 
-    const world = await createWorld(context, {
+    const world = createWorld({
+      device,
+      element,
       view,
       layers,
     });

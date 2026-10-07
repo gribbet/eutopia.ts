@@ -2,9 +2,9 @@ import type { Signal } from "signaloits";
 import { $ } from "signaloits";
 
 import { createBuffer, createDataBuffer } from "../../buffer";
-import { viewLayout } from "../../common";
+import { loadShader, viewLayout } from "../../common";
 
-export const createComputePipeline = async ({
+export const createComputePipeline = ({
   device,
   tilesBuffer,
   countBuffer,
@@ -19,11 +19,8 @@ export const createComputePipeline = async ({
   elevationMapBuffer: GPUBuffer;
   elevationTextures: Signal<GPUTexture>;
 }) => {
-  const module = device.createShaderModule({
-    code:
-      (await (await fetch(new URL("../common.wgsl", import.meta.url))).text()) +
-      (await (await fetch(new URL("./compute.wgsl", import.meta.url))).text()),
-  });
+  const commonShader = loadShader(new URL("../common.wgsl", import.meta.url));
+  const computeShader = loadShader(new URL("./compute.wgsl", import.meta.url));
 
   const layout = device.createBindGroupLayout({
     entries: [
@@ -64,12 +61,20 @@ export const createComputePipeline = async ({
     bindGroupLayouts: [viewLayout(device), layout],
   });
 
-  const pipeline = await device.createComputePipelineAsync({
-    layout: pipelineLayout,
-    compute: {
-      module,
-      entryPoint: "main",
-    },
+  const pipeline = $(() => {
+    const commonCode = commonShader();
+    const computeCode = computeShader();
+    if (commonCode === undefined || computeCode === undefined) return undefined;
+    const module = device.createShaderModule({
+      code: commonCode + computeCode,
+    });
+    return device.createComputePipeline({
+      layout: pipelineLayout,
+      compute: {
+        module,
+        entryPoint: "main",
+      },
+    });
   });
 
   const countReadBuffer = createDataBuffer(
@@ -109,7 +114,9 @@ export const createComputePipeline = async ({
   let reading = false;
 
   const compute = (pass: GPUComputePassEncoder) => {
-    pass.setPipeline(pipeline);
+    const pipeline_ = pipeline();
+    if (!pipeline_) return;
+    pass.setPipeline(pipeline_);
     pass.setBindGroup(1, bindGroup());
     pass.dispatchWorkgroups(1);
   };

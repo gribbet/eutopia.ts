@@ -2,7 +2,7 @@ import type { Properties } from "signaloits";
 import { $, defer, effect, map, resolve, signal } from "signaloits";
 
 import { createDataBuffer } from "../buffer";
-import { createLayerType } from "../common";
+import { createLayerType, loadShader } from "../common";
 import type { Vec2, Vec3, Vec4 } from "../model";
 import type { PickHandlers } from "../pick-registry";
 import {
@@ -42,7 +42,7 @@ export type ObjectProps = CommonLayerProps & {
 };
 
 export const object = createLayerType<ObjectProps>(
-  async (context, { mesh, instances, depth, polygonOffset }) => {
+  (context, { mesh, instances, depth, polygonOffset }) => {
     const { device, pickRegistry } = context;
 
     const slots = createSlotAllocator(
@@ -64,9 +64,7 @@ export const object = createLayerType<ObjectProps>(
       },
     );
 
-    const code = await (
-      await fetch(new URL("./object.wgsl", import.meta.url))
-    ).text();
+    const shader = loadShader(new URL("./object.wgsl", import.meta.url));
 
     const bindGroupLayout = device.createBindGroupLayout({
       entries: [
@@ -85,9 +83,9 @@ export const object = createLayerType<ObjectProps>(
       }),
     );
 
-    const { render, pick } = await createLayerRenderer({
+    const { render, pick } = createLayerRenderer({
       context,
-      code,
+      shader,
       topology: "triangle-list",
       bindGroupLayout,
       depth,

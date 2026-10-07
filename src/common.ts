@@ -1,4 +1,4 @@
-import type { Properties } from "signaloits";
+import { signal, type Properties, type Signal } from "signaloits";
 
 import type { Context } from "./context";
 
@@ -10,10 +10,7 @@ export type Layer = {
   postFrame?: () => void;
 };
 
-export type LayerFactory<P> = (
-  context: Context,
-  props: Properties<P>,
-) => Layer | Promise<Layer>;
+export type LayerFactory<P> = (context: Context, props: Properties<P>) => Layer;
 
 export type LayerDescriptor = <R>(
   apply: <P>(factory: LayerFactory<P>, properties: Properties<P>) => R,
@@ -28,8 +25,19 @@ export const createLayerType =
 export const createLayer = (
   context: Context,
   descriptor: LayerDescriptor,
-): Layer | Promise<Layer> =>
-  descriptor((factory, properties) => factory(context, properties));
+): Layer => descriptor((factory, properties) => factory(context, properties));
+
+export const loadShader = (url: URL): Signal<string | undefined> => {
+  const [code, setCode] = signal<string | undefined>(undefined);
+  void fetch(url).then(async response => {
+    if (!response.ok)
+      throw new Error(
+        `Failed to load shader "${url}": ${response.status} ${response.statusText}`,
+      );
+    setCode(await response.text());
+  });
+  return code;
+};
 
 export const viewLayout = (device: GPUDevice) =>
   device.createBindGroupLayout({
