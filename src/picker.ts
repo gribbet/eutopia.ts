@@ -13,15 +13,14 @@ export type PickResult = {
   id: number;
 };
 
-export const createPicker = (
-  context: Pick<Context, "device" | "size" | "devicePixelRatio">,
-) => {
+export const createPicker = (context: Context) => {
   const readStride = 256;
   const xyReadOffset = 0;
   const zReadOffset = readStride;
   const idReadOffset = readStride * 2;
 
   const { device, size, devicePixelRatio } = context;
+
   const textureSize = $(() => {
     const [width, height] = size();
     return [width * devicePixelRatio, height * devicePixelRatio] as const;
