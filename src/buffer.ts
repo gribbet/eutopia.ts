@@ -1,12 +1,11 @@
-import { defer, signal } from "signaloits";
+import { defer, effect, signal, untrack } from "signaloits";
 
 export const createBuffer = (
   device: GPUDevice,
   descriptor: GPUBufferDescriptor,
-  { cleanup = true }: { cleanup?: boolean } = {},
 ): GPUBuffer => {
   const buffer = device.createBuffer(descriptor);
-  if (cleanup) defer(() => buffer.destroy());
+  defer(() => buffer.destroy());
   return buffer;
 };
 
@@ -33,26 +32,28 @@ export const createResizableBuffer = (
   initialSize: number,
 ) => {
   let size = Math.max(4, (initialSize + 3) & ~3);
-  let buffer = createBuffer(device, { size, usage }, { cleanup: false });
-  const [accessor, setBuffer] = signal(buffer);
+  const [buffer, setBuffer] = signal(createBuffer(device, { size, usage }));
+  const [requiredSize, setRequiredSize] = signal(size);
 
-  const ensureSize = (requiredSize: number) => {
-    const required = Math.max(4, (requiredSize + 3) & ~3);
+  effect(() => {
+    const required = requiredSize();
     if (required <= size) return;
 
     let next = size;
     while (next < required) next *= 2;
 
-    buffer.destroy();
-    buffer = createBuffer(device, { size: next, usage }, { cleanup: false });
+    untrack(buffer).destroy();
+    setBuffer(createBuffer(device, { size: next, usage }));
     size = next;
-    setBuffer(buffer);
+  });
+
+  const ensureSize = (required: number) => {
+    const aligned = Math.max(4, (required + 3) & ~3);
+    if (aligned > size) setRequiredSize(aligned);
   };
 
-  defer(() => buffer.destroy());
-
   return {
-    buffer: accessor,
+    buffer,
     ensureSize,
   };
 };
