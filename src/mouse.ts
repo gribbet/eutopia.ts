@@ -68,15 +68,6 @@ export const createMouse = ({
 
   const pendingMoves = new Map<number, PendingMove>();
   let processingMove = false;
-  let moveFrame = 0;
-
-  const schedulePointerMove = () => {
-    if (moveFrame || processingMove) return;
-    moveFrame = requestAnimationFrame(() => {
-      moveFrame = 0;
-      void processPointerMove();
-    });
-  };
 
   const processPointerMove = async () => {
     if (processingMove) return;
@@ -120,7 +111,7 @@ export const createMouse = ({
       }
     } finally {
       processingMove = false;
-      if (pendingMoves.size) schedulePointerMove();
+      if (pendingMoves.size) void processPointerMove();
     }
   };
 
@@ -165,7 +156,7 @@ export const createMouse = ({
     const [x, y] = pointerPosition(event);
     const { pointerId } = event;
     pendingMoves.set(pointerId, { x, y, pointerId });
-    schedulePointerMove();
+    if (!processingMove) void processPointerMove();
   };
 
   const onPointerUp = async (event: PointerEvent) => {
@@ -216,7 +207,6 @@ export const createMouse = ({
   defer(() => {
     abortController.abort();
     pendingMoves.clear();
-    if (moveFrame) cancelAnimationFrame(moveFrame);
   });
 
   return { isDragging };
