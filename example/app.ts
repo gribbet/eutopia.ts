@@ -268,7 +268,7 @@ export const createApp = () =>
 
     const layers = $(() => [
       terrain({ imageryUrl, elevationUrl, onClick: onTerrainClick }),
-      text({ entries: textEntries }),
+      text({ entries: textEntries, polygonOffset: -100 }),
       line({ vertices: staticLineExamples, outline }),
       line({ vertices: lineExamples, outline }),
       fill({
