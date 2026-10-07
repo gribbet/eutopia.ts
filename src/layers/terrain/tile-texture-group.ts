@@ -4,7 +4,7 @@ import { loadImage } from "../../image-load";
 import { cropImage } from "../../image-process";
 import type { Vec3 } from "../../model";
 import { createTextureGroup } from "../../texture-group";
-import { toKey } from "./common";
+import { fromKey, toKey } from "./common";
 import type { TileMapBuffer } from "./tile-map-buffer";
 
 export const createTileTextureGroup = ({
@@ -22,23 +22,16 @@ export const createTileTextureGroup = ({
   maxZ?: number;
   mipmap?: boolean;
 }) => {
-  const tilesByKey = new Map<string, Vec3>();
-
   const textureGroup = createTextureGroup({
     context,
     load: (key, signal) => {
-      const tile = tilesByKey.get(key)!;
+      const tile = fromKey(Number(key));
       return mipmap
         ? loadTileMipmaps(tile, signal)
         : loadTileImage(tile, signal);
     },
-    onLoad: (key, index) => map.set(tilesByKey.get(key)!, index),
-    onEvict: key => {
-      const tile = tilesByKey.get(key);
-      if (!tile) return;
-      map.clear(tile);
-      tilesByKey.delete(key);
-    },
+    onLoad: (key, index) => map.set(fromKey(Number(key)), index),
+    onEvict: key => map.clear(fromKey(Number(key))),
   });
   const { texture } = textureGroup;
 
@@ -96,11 +89,7 @@ export const createTileTextureGroup = ({
     textureGroup.ensure(
       unique([...tiles, ...descendants(parents(tiles))])
         .filter(([, , z]) => z <= maxZ)
-        .map(xyz => {
-          const key = toKey(xyz).toString();
-          tilesByKey.set(key, xyz);
-          return key;
-        }),
+        .map(xyz => toKey(xyz).toString()),
     );
   };
 
