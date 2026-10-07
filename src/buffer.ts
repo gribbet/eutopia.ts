@@ -1,4 +1,4 @@
-import { defer, effect, signal, untrack } from "signaloits";
+import { defer, derived, signal, untrack } from "signaloits";
 
 export const createBuffer = (
   device: GPUDevice,
@@ -31,26 +31,20 @@ export const createResizableBuffer = (
   usage: GPUBufferUsageFlags,
   initialSize: number,
 ) => {
-  let size = Math.max(4, (initialSize + 3) & ~3);
-  const [buffer, setBuffer] = signal(createBuffer(device, { size, usage }));
-  const [requiredSize, setRequiredSize] = signal(size);
-
-  effect(() => {
-    const required = requiredSize();
-    if (required <= size) return;
-
-    let next = size;
-    while (next < required) next *= 2;
-
-    untrack(buffer).destroy();
-    setBuffer(createBuffer(device, { size: next, usage }));
-    size = next;
-  });
+  const [size, setSize] = signal(0);
 
   const ensureSize = (required: number) => {
     const aligned = Math.max(4, (required + 3) & ~3);
-    if (aligned > size) setRequiredSize(aligned);
+    let next = untrack(size);
+    if (aligned <= next) return;
+
+    if (next === 0) next = aligned;
+    else while (next < aligned) next *= 2;
+    setSize(next);
   };
+
+  ensureSize(initialSize);
+  const buffer = derived(() => createBuffer(device, { size: size(), usage }));
 
   return {
     buffer,
