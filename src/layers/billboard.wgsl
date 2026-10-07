@@ -75,7 +75,7 @@ fn render(input: Vertex) -> RenderOutput {
     }
     let texel = textureSampleBias(textures, sample, input.uv, input.texture, -1.0);
     let color = texel * input.color;
-    if color.a < 0.01 {
+    if color.a < 0.25 {
         discard;
     }
     return RenderOutput(color, vec4(input.outline.rgb, input.outline.a * texel.a));
