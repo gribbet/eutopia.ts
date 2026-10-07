@@ -9,6 +9,6 @@ transitions, vector math helpers, and WGSL-backed layer assets.
 ## Commands
 
 ```sh
-vp run build
-vp check
+npm run build
+npm run check
 ```
