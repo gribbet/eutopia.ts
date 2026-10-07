@@ -28,7 +28,7 @@ export const createRenderPipeline = ({
   depth?: boolean;
   polygonOffset?: CommonLayerProps["polygonOffset"];
 }) => {
-  const { device, devicePixelRatio } = context;
+  const { device } = context;
   const shader = loadShader(new URL("./render.wgsl", import.meta.url));
 
   const bindGroupLayout = device.createBindGroupLayout({
@@ -114,7 +114,7 @@ export const createRenderPipeline = ({
     magFilter: "linear",
     minFilter: "linear",
     mipmapFilter: "linear",
-    maxAnisotropy: 4,
+    maxAnisotropy: 16,
   });
 
   const bindGroup = $(() =>
@@ -148,7 +148,6 @@ export const createRenderPipeline = ({
     ],
     topology: "triangle-list",
     shader,
-    constants: { ["device_pixel_ratio"]: devicePixelRatio },
     depth,
     polygonOffset,
     bindGroup,

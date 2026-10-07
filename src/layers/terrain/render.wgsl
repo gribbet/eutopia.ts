@@ -5,8 +5,6 @@
 @group(1) @binding(4) var<uniform> pick_id: u32;
 @group(1) @binding(5) var<uniform> outline: vec4<f32>;
 
-override device_pixel_ratio: f32 = 1.0;
-
 struct VertexIn {
     @builtin(instance_index) instance_index: u32,
     @location(0) uvw: vec3<u32>,
@@ -57,7 +55,7 @@ fn render(input: VertexOut) -> RenderOutput {
     let size = vec2<f32>(textureDimensions(imagery_textures).xy);
     let dx = dpdx(uv * size);
     let dy = dpdy(uv * size);
-    let lod = max(log2(max(length(dx), length(dy))) + log2(device_pixel_ratio) + 0.5, 0.0);
+    let lod = max(0.5 * (log2(length(dx)) + log2(length(dy))) + 1.0, 0.0);
     let color = textureSampleLevel(imagery_textures, sample, uv, index.x, lod);
     return RenderOutput(color, vec4(outline.rgb, outline.a * color.a));
 }
