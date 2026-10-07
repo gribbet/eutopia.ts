@@ -40,6 +40,7 @@ const onMessage = async (event: MessageEvent) => {
     else if (error.message === "Failed to fetch") return postMessage({ url });
     throw error;
   } finally {
+    abortController.abort();
     release();
   }
 };
