@@ -58,7 +58,6 @@ const renderTextImage = ({
     context.textAlign = "center";
     context.textBaseline = "alphabetic";
     context.clearRect(0, 0, width, height);
-    context.strokeText(text, x, y);
     context.fillText(text, x, y);
 
     const blob = await canvas.convertToBlob({ type: "image/png" });
