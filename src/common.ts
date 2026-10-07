@@ -56,13 +56,17 @@ export const viewLayout = (device: GPUDevice) =>
 export const limit = (n: number) => {
   let active = 0;
   const queue: (() => void)[] = [];
-  return async () => {
+  return async <T>(run: () => T | PromiseLike<T>): Promise<T> => {
     if (active >= n) await new Promise<void>(_ => queue.push(_));
-    active++;
-    return () => {
-      active--;
-      queue.shift()?.();
-    };
+    else active++;
+
+    try {
+      return await run();
+    } finally {
+      const next = queue.shift();
+      if (next) next();
+      else active--;
+    }
   };
 };
 

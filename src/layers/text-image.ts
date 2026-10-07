@@ -27,7 +27,7 @@ export const createTextImage = ({
   return result;
 };
 
-const renderTextImage = async ({
+const renderTextImage = ({
   text,
   font,
   fontSize,
@@ -35,12 +35,10 @@ const renderTextImage = async ({
   text: string;
   font: string;
   fontSize: number;
-}) => {
-  if (!context) throw new Error("No context");
+}) =>
+  acquire(async () => {
+    if (!context) throw new Error("No context");
 
-  const release = await acquire();
-
-  try {
     const fontString = `${fontSize}px ${font}`;
     context.font = fontString;
     const metrics = context.measureText(text);
@@ -71,7 +69,4 @@ const renderTextImage = async ({
       reader.onerror = reject;
       reader.readAsDataURL(blob);
     });
-  } finally {
-    release();
-  }
-};
+  });

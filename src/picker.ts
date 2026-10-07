@@ -19,12 +19,7 @@ export const createPicker = (context: Context) => {
   const zReadOffset = readStride;
   const idReadOffset = readStride * 2;
 
-  const { device, size, devicePixelRatio } = context;
-
-  const textureSize = $(() => {
-    const [width, height] = size();
-    return [width * devicePixelRatio, height * devicePixelRatio] as const;
-  });
+  const { device, textureSize, devicePixelRatio } = context;
 
   const xyTexture = $(() =>
     createTexture(device, {
@@ -95,13 +90,13 @@ export const createPicker = (context: Context) => {
   ) => {
     if (!pending || reading) return;
     const [x, y] = pending.xy;
-    const [width, height] = size();
-    const maxX = Math.max(0, Math.floor(width * devicePixelRatio) - 1);
-    const maxY = Math.max(0, Math.floor(height * devicePixelRatio) - 1);
-    const ox = Math.min(Math.max(0, Math.floor(x * devicePixelRatio)), maxX);
-    const oy = Math.min(Math.max(0, Math.floor(y * devicePixelRatio)), maxY);
-
-    const origin: [number, number, number] = [ox, oy, 0];
+    const [width, height] = textureSize();
+    const origin: [number, number, number] = [
+      Math.min(Math.max(0, Math.floor(x * devicePixelRatio)), width - 1),
+      Math.min(Math.max(0, Math.floor(y * devicePixelRatio)), height - 1),
+      0,
+    ];
+    const [ox, oy] = origin;
     const pass = encoder.beginRenderPass({
       colorAttachments: [
         {

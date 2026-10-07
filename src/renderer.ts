@@ -7,12 +7,7 @@ import { createTexture } from "./texture";
 type Renderer = (pass: GPURenderPassEncoder) => void;
 
 export const createRenderer = (context: Context) => {
-  const { device, size, devicePixelRatio, format, sampleCount } = context;
-
-  const textureSize = $(() => {
-    const [width, height] = size();
-    return [width * devicePixelRatio, height * devicePixelRatio] as const;
-  });
+  const { device, textureSize, format, sampleCount } = context;
 
   const renderTexture = $(() =>
     createTexture(device, {

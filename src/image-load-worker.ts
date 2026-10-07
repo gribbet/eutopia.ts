@@ -18,31 +18,30 @@ const onMessage = async (event: MessageEvent) => {
     },
     { signal },
   );
-  const release = await acquire();
+  await acquire(async () => {
+    try {
+      if (signal.aborted) return;
 
-  try {
-    if (signal.aborted) return;
+      const response = await fetch(url, { mode: "cors", signal });
+      if (!response.ok) {
+        postMessage({ url });
+        return;
+      }
 
-    const response = await fetch(url, { mode: "cors", signal });
-    if (!response.ok) {
-      postMessage({ url });
-      return;
+      const blob = await response.blob();
+      const image = await createImageBitmap(blob);
+
+      // @ts-expect-error Transferable
+      postMessage({ url, image }, [image]);
+    } catch (error) {
+      if (!(error instanceof Error)) throw error;
+      if (error.name === "AbortError") return;
+      else if (error.message === "Failed to fetch") return postMessage({ url });
+      throw error;
+    } finally {
+      abortController.abort();
     }
-
-    const blob = await response.blob();
-    const image = await createImageBitmap(blob);
-
-    // @ts-expect-error Transferable
-    postMessage({ url, image }, [image]);
-  } catch (error) {
-    if (!(error instanceof Error)) throw error;
-    if (error.name === "AbortError") return;
-    else if (error.message === "Failed to fetch") return postMessage({ url });
-    throw error;
-  } finally {
-    abortController.abort();
-    release();
-  }
+  });
 };
 
 addEventListener("message", event => void onMessage(event));

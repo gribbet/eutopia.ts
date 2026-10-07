@@ -1,4 +1,4 @@
-import { defer, signal } from "signaloits";
+import { $, defer, signal } from "signaloits";
 
 import type { Vec2 } from "./model";
 import { createPickRegistry } from "./pick-registry";
@@ -20,13 +20,21 @@ export const createContext = (
 
   const devicePixelRatio = window.devicePixelRatio || 1;
   const [size, setSize] = signal<Vec2>([0, 0]);
+  const textureSize = $((): Vec2 => {
+    const [width, height] = size();
+    return [
+      Math.max(1, Math.round(width * devicePixelRatio)),
+      Math.max(1, Math.round(height * devicePixelRatio)),
+    ];
+  });
 
   const resize = ({ width, height }: { width: number; height: number }) => {
     width = Math.max(1, width);
     height = Math.max(1, height);
-    element.width = width * devicePixelRatio;
-    element.height = height * devicePixelRatio;
     setSize([width, height]);
+    const [textureWidth, textureHeight] = textureSize();
+    element.width = textureWidth;
+    element.height = textureHeight;
   };
 
   resize(element.getBoundingClientRect());
@@ -46,6 +54,7 @@ export const createContext = (
     context,
     format,
     size,
+    textureSize,
     devicePixelRatio,
     sampleCount,
     textureLoader,
