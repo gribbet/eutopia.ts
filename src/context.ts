@@ -19,14 +19,21 @@ export const createContext = (
   context.configure({ device, format, alphaMode: "opaque" });
 
   const devicePixelRatio = window.devicePixelRatio || 1;
-  const { width, height } = element;
-  const [size, setSize] = signal<Vec2>([width, height]);
-  const observer = new ResizeObserver(([entry]) => {
-    if (!entry) return;
-    const { width, height } = entry.contentRect;
+  const [size, setSize] = signal<Vec2>([0, 0]);
+
+  const resize = ({ width, height }: { width: number; height: number }) => {
+    width = Math.max(1, width);
+    height = Math.max(1, height);
     element.width = width * devicePixelRatio;
     element.height = height * devicePixelRatio;
     setSize([width, height]);
+  };
+
+  resize(element.getBoundingClientRect());
+
+  const observer = new ResizeObserver(([entry]) => {
+    if (!entry) return;
+    resize(entry.contentRect);
   });
   observer.observe(element);
   defer(() => observer.disconnect());
