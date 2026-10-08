@@ -28,7 +28,7 @@ fn rotate_quat(v: vec3<f32>, q: vec4<f32>) -> vec3<f32> {
 }
 
 fn compute_local_basis(position: Position, center: Position) -> mat3x3<f32> {
-    if view.distance < 10000.0 {
+    if view.distance < SPHERICAL_DISTANCE {
         // X→North, Y→West (−East), Z→Up
         return mat3x3<f32>(
             vec3<f32>(0.0, 1.0, 0.0),

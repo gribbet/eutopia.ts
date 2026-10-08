@@ -2,6 +2,7 @@ const PI = radians(180.);
 const ONE = 2147483648.0;
 const RADIUS = 6371000.0;
 const CIRCUMFERENCE = 2.0 * PI * RADIUS;
+const SPHERICAL_DISTANCE = 10000.0;
 
 struct Position {
     x: u32, // Mercator [0, 2^31)
@@ -52,10 +53,10 @@ fn transform_spherical(position: Position, center: Position) -> vec3<f32> {
 }
 
 fn transform(position: Position, center: Position, projection: mat4x4<f32>) -> vec3<f32> {
-    if view.distance < 10000.0 {
-        return transform_flat(position, center);
+    if view.distance >= SPHERICAL_DISTANCE {
+        return transform_spherical(position, center);
     }
-    return transform_spherical(position, center);
+    return transform_flat(position, center);
 }
 
 fn position_from_flat_local(local: vec3<f32>, center: Position) -> Position {
@@ -71,6 +72,41 @@ fn position_from_flat_local(local: vec3<f32>, center: Position) -> Position {
     let z = local.z + center.z + drop;
 
     return Position(xy.x, xy.y, z);
+}
+
+fn position_from_spherical_local(local: vec3<f32>, center: Position) -> Position {
+    var center_lat = atan(sinh((f32(center.y) / ONE - 0.5) * (-2.0 * PI)));
+    center_lat = select(center_lat, PI / 2.0, center.y == 0u);
+    center_lat = select(center_lat, -PI / 2.0, center.y == 1u << 31);
+
+    let sin_center_lat = sin(center_lat);
+    let cos_center_lat = cos(center_lat);
+    let radial = vec3<f32>(local.x, local.y, local.z + RADIUS + center.z);
+    let radius = length(radial);
+    let sin_lat = clamp(
+        (sin_center_lat * radial.z + cos_center_lat * radial.y) / max(radius, 1e-6),
+        -1.0,
+        1.0,
+    );
+    let lat = asin(sin_lat);
+    let d_lon = atan2(
+        radial.x,
+        cos_center_lat * radial.z - sin_center_lat * radial.y,
+    );
+
+    let delta_x = i32(round(d_lon / (2.0 * PI) * ONE));
+    let x = center.x + bitcast<u32>(delta_x);
+    let mercator_y = (0.5 - log(tan(PI / 4.0 + lat / 2.0)) / (2.0 * PI)) * ONE;
+    let y = u32(round(clamp(mercator_y, 0.0, ONE)));
+
+    return Position(x, y, radius - RADIUS);
+}
+
+fn position_from_local(local: vec3<f32>, center: Position) -> Position {
+    if view.distance >= SPHERICAL_DISTANCE {
+        return position_from_spherical_local(local, center);
+    }
+    return position_from_flat_local(local, center);
 }
 
 
@@ -102,10 +138,10 @@ struct PickOutput {
 struct RenderOutput {
     @location(0) color: vec4<f32>,
     @location(1) outline: vec4<f32>,
-};
+}
 
 fn pack_pick(local: vec3<f32>, id: u32) -> PickOutput {
-    let p = position_from_flat_local(local, view.center);
+    let p = position_from_local(local, view.center);
     let xy = vec2<u32>(clamp(
         vec2<f32>(vec2<u32>(p.x, p.y)),
         vec2<f32>(0.0),
