@@ -65,7 +65,7 @@ export const billboard = createLayerType<BillboardProps>(
 
     const textureGroup = createTextureGroup({
       context,
-      load: loadImage,
+      load: async (url, signal) => [await loadImage(url, signal)],
       onLoad: (url, index, width, height) =>
         setImageMetadata({
           ...imageMetadata(),

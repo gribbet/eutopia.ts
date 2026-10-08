@@ -41,8 +41,10 @@ export const createTileTextureGroup = ({
       .replace("{x}", x.toString())
       .replace("{y}", y.toString());
 
-  const loadTileImage = ([x, y, z]: Vec3, signal?: AbortSignal) =>
-    loadImage(tileUrl(x, y, z), signal);
+  const loadTileImage = async ([x, y, z]: Vec3, signal?: AbortSignal) => {
+    const image = await loadImage(tileUrl(x, y, z), signal);
+    return [image];
+  };
 
   type MipSource = {
     url: string;
