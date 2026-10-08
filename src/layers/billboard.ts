@@ -17,6 +17,7 @@ import {
 } from "../storage";
 import { createTextureGroup } from "../texture-group";
 import { type CommonLayerProps, createLayerRenderer } from "./common";
+
 export type Billboard = PickHandlers & {
   image: string;
   size: number;

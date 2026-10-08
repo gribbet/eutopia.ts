@@ -8,11 +8,11 @@ import { fill } from "./fill";
 
 export type PolygonProps = PickHandlers &
   CommonLayerProps & {
-    rings: Vec3[][]; // first ring is the exterior, subsequent rings are holes
+    rings: readonly (readonly Vec3[])[]; // first ring is the exterior, subsequent rings are holes
     color: Vec4;
   };
 
-const area = (p: Vec3[]) =>
+const area = (p: readonly Vec3[]) =>
   p.reduce((s, a, i) => {
     const b = p[(i + 1) % p.length]!;
     const [, ax, ay] = a;
@@ -30,7 +30,7 @@ const cross = (a: Vec3, b: Vec3, c: Vec3) => {
 const inside = (a: Vec3, b: Vec3, c: Vec3, p: Vec3) =>
   cross(a, b, p) >= 0 && cross(b, c, p) >= 0 && cross(c, a, p) >= 0;
 
-const bridgeHole = (outer: Vec3[], hole: Vec3[]): Vec3[] => {
+const bridgeHole = (outer: readonly Vec3[], hole: readonly Vec3[]): Vec3[] => {
   // Find the rightmost vertex of the hole (max x, stored at index 1 in working format)
   let hi = 0;
   for (let i = 1; i < hole.length; i++) if (hole[i]![1] > hole[hi]![1]) hi = i;
@@ -79,7 +79,10 @@ const bridgeHole = (outer: Vec3[], hole: Vec3[]): Vec3[] => {
   ];
 };
 
-const earcut = (vertices: Vec3[], holes: Vec3[][] = []): number[] => {
+const earcut = (
+  vertices: readonly Vec3[],
+  holes: readonly (readonly Vec3[])[] = [],
+): number[] => {
   let p: Vec3[] = vertices.map(([x, y], i) => [i, x, y] as Vec3);
   if (area(p) < 0) p.reverse();
 

@@ -22,8 +22,8 @@ export type Vertex = {
 };
 
 export type Mesh = {
-  vertices: Vertex[];
-  indices: Vec3[];
+  vertices: readonly Vertex[];
+  indices: readonly Vec3[];
 };
 
 export type Instance = PickHandlers & {

@@ -18,7 +18,7 @@ export const createTextureGroup = ({
   load: (
     key: string,
     signal: AbortSignal,
-  ) => Promise<ImageBitmap | ImageBitmap[]>;
+  ) => Promise<ImageBitmap | readonly ImageBitmap[]>;
   onLoad?: (key: string, index: number, width: number, height: number) => void;
   onEvict?: (key: string, index: number) => void;
 }) => {
@@ -80,9 +80,11 @@ export const createTextureGroup = ({
     return false;
   };
 
-  const normalizeImages = async (source: ImageBitmap | ImageBitmap[]) => {
+  const normalizeImages = async (
+    source: ImageBitmap | readonly ImageBitmap[],
+  ) => {
     const levels = texture().mipLevelCount;
-    const images = Array.isArray(source)
+    const images = isImageBitmapArray(source)
       ? source.slice(0, levels)
       : await createMipmaps(source, levels);
 
@@ -98,7 +100,7 @@ export const createTextureGroup = ({
   const doLoad = async (key: string, index: number, signal: AbortSignal) => {
     try {
       const source = await load(key, signal);
-      const [first] = Array.isArray(source) ? source : [source];
+      const first = isImageBitmapArray(source) ? source[0] : source;
       if (!first) throw new Error(`Texture loader returned no images: ${key}`);
 
       const { width, height } = first;
@@ -130,7 +132,7 @@ export const createTextureGroup = ({
     }
   };
 
-  const ensure = (keys: string[]) => {
+  const ensure = (keys: readonly string[]) => {
     keys = keys.slice(0, layers);
     const current = new Set(keys);
     mapping
@@ -172,3 +174,7 @@ export const createTextureGroup = ({
     texture,
   };
 };
+
+const isImageBitmapArray = (
+  source: ImageBitmap | readonly ImageBitmap[],
+): source is readonly ImageBitmap[] => Array.isArray(source);

@@ -24,7 +24,7 @@ export type Vertex = {
 
 export type LineProps = PickHandlers &
   CommonLayerProps & {
-    vertices: Vertex[][];
+    vertices: readonly (readonly Vertex[])[];
   };
 
 export const line = createLayerType<LineProps>((context, props) => {

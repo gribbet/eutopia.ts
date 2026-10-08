@@ -13,8 +13,8 @@ export type Vertex = {
 
 export type FillProps = PickHandlers &
   CommonLayerProps & {
-    vertices: Vertex[];
-    indices: number[];
+    vertices: readonly Vertex[];
+    indices: readonly number[];
   };
 
 export const fill = createLayerType<FillProps>((context, props) => {
