@@ -141,15 +141,11 @@ export const createComputePipeline = ({
     buffer.unmap();
     reading = false;
 
-    return Array.from(
-      { length: count },
-      (_, i) =>
-        [
-          result[i * 8] ?? 0,
-          result[i * 8 + 1] ?? 0,
-          result[i * 8 + 2] ?? 0,
-        ] satisfies [number, number, number],
-    );
+    return Array.from({ length: count }, (_, i): [number, number, number] => [
+      result[i * 8] ?? 0,
+      result[i * 8 + 1] ?? 0,
+      result[i * 8 + 2] ?? 0,
+    ]);
   };
 
   return {

@@ -48,14 +48,14 @@ export const createLayerRenderer = ({
     alpha: { srcFactor: "one", dstFactor: "one-minus-src-alpha" },
   };
 
-  const depthStencil = $(() => {
+  const depthStencil = $((): GPUDepthStencilState => {
     const depthEnabled = resolve(depth) ?? true;
     return {
       format: "depth24plus" as const,
       depthWriteEnabled: resolve(depthWrite) ?? depthEnabled,
       depthCompare: depthEnabled ? "less" : "always",
       depthBias: resolve(polygonOffset) ?? 0,
-    } satisfies GPUDepthStencilState;
+    };
   });
 
   const module = $(() => {

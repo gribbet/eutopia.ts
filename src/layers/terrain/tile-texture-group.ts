@@ -98,10 +98,10 @@ export const createTileTextureGroup = ({
   return { ensure, texture };
 };
 
-const downsample = ([x, y, z]: Vec3, downsample: number) => {
+const downsample = ([x, y, z]: Vec3, downsample: number): Vec3 | undefined => {
   if (downsample > z) return undefined;
   const k = 2 ** downsample;
-  return [Math.floor(x / k), Math.floor(y / k), z - downsample] satisfies Vec3;
+  return [Math.floor(x / k), Math.floor(y / k), z - downsample];
 };
 
 const unique = (tiles: readonly Vec3[]) => [

@@ -275,7 +275,6 @@ export const createApp = () =>
       line({ vertices: lineExamples, outline }),
       object({
         mesh: cubeMesh,
-        //polygonOffset: -100000,
         instances: [
           {
             position: [-122.4194, 37.7749, 10000],
