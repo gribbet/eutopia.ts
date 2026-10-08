@@ -4,7 +4,7 @@ import { createDataBuffer } from "../../buffer";
 import { createLayerType } from "../../common";
 import { terrainDownsample, tileTextureLayers } from "../../configuration";
 import type { PickHandlers } from "../../pick-registry";
-import { type CommonLayerProps } from "../common";
+import type { CommonLayerProps } from "../common";
 import { createComputePipeline } from "./compute";
 import { createRenderPipeline } from "./render";
 import { createTileMapBuffer } from "./tile-map-buffer";

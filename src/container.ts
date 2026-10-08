@@ -1,12 +1,8 @@
-import type { Properties } from "signaloits";
 import { map } from "signaloits";
+import type { Properties } from "signaloits";
 
-import {
-  createLayer,
-  createLayerType,
-  type Layer,
-  type LayerDescriptor,
-} from "./common";
+import { createLayer, createLayerType } from "./common";
+import type { Layer, LayerDescriptor } from "./common";
 import type { Context } from "./context";
 
 export type ContainerProperties = {

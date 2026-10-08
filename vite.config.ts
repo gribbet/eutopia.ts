@@ -1,9 +1,3 @@
-import { defineConfig } from "@gribbet/vite-config";
+import { config } from "@gribbet/vite-config";
 
-export default defineConfig({
-  lint: {
-    rules: {
-      "typescript/unbound-method": "off",
-    },
-  },
-});
+export default config;

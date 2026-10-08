@@ -3,7 +3,7 @@ import { effect, resolve, signal } from "signaloits";
 import { createLayer, createLayerType } from "../common";
 import type { Vec3, Vec4 } from "../model";
 import type { PickHandlers } from "../pick-registry";
-import { type CommonLayerProps } from "./common";
+import type { CommonLayerProps } from "./common";
 import { fill } from "./fill";
 
 export type PolygonProps = PickHandlers &

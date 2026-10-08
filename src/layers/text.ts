@@ -1,9 +1,9 @@
-import type { Properties } from "signaloits";
 import { effect, map, resolve, signal } from "signaloits";
+import type { Properties } from "signaloits";
 
 import { createLatest, createLayer, createLayerType } from "../common";
 import type { Vec3, Vec4 } from "../model";
-import { type PickHandlers } from "../pick-registry";
+import type { PickHandlers } from "../pick-registry";
 import { billboard } from "./billboard";
 import type { CommonLayerProps } from "./common";
 import { createTextImage } from "./text-image";

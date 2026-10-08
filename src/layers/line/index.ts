@@ -12,7 +12,8 @@ import {
   u32,
   vec4f,
 } from "../../storage";
-import { type CommonLayerProps, createLayerRenderer } from "../common";
+import { createLayerRenderer } from "../common";
+import type { CommonLayerProps } from "../common";
 
 export type Vertex = {
   position: Vec3;

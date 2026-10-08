@@ -4,7 +4,8 @@ import { createLayerType, loadShader } from "../common";
 import type { Vec3, Vec4 } from "../model";
 import type { PickHandlers } from "../pick-registry";
 import { array, buffer, position, struct, u32, vec4f } from "../storage";
-import { type CommonLayerProps, createLayerRenderer } from "./common";
+import { createLayerRenderer } from "./common";
+import type { CommonLayerProps } from "./common";
 
 export type Vertex = {
   position: Vec3;

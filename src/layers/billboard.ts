@@ -1,5 +1,5 @@
-import type { Properties } from "signaloits";
 import { $, defer, effect, map, resolve, signal } from "signaloits";
+import type { Properties } from "signaloits";
 
 import { createLayerType, loadShader } from "../common";
 import { loadImage } from "../image-load";
@@ -16,7 +16,8 @@ import {
   vec4f,
 } from "../storage";
 import { createTextureGroup } from "../texture-group";
-import { type CommonLayerProps, createLayerRenderer } from "./common";
+import { createLayerRenderer } from "./common";
+import type { CommonLayerProps } from "./common";
 
 export type Billboard = PickHandlers & {
   image: string;

@@ -1,5 +1,5 @@
-import type { Properties } from "signaloits";
 import { $, defer, effect, map, resolve, signal } from "signaloits";
+import type { Properties } from "signaloits";
 
 import { createDataBuffer } from "../buffer";
 import { createLayerType, loadShader } from "../common";
@@ -13,7 +13,8 @@ import {
   u32,
   vec4f,
 } from "../storage";
-import { type CommonLayerProps, createLayerRenderer } from "./common";
+import { createLayerRenderer } from "./common";
+import type { CommonLayerProps } from "./common";
 export type Vertex = {
   position: Vec3;
   color?: Vec4;

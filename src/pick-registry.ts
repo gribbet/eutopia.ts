@@ -1,5 +1,5 @@
-import type { Properties } from "signaloits";
 import { $, defer, resolve, signal } from "signaloits";
+import type { Properties } from "signaloits";
 
 import type { Vec3, Vec4 } from "./model";
 

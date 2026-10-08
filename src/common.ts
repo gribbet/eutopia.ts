@@ -1,4 +1,5 @@
-import { signal, type Properties, type Signal } from "signaloits";
+import { signal } from "signaloits";
+import type { Properties, Signal } from "signaloits";
 
 import type { Context } from "./context";
 

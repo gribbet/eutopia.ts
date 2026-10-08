@@ -1,8 +1,9 @@
-import type { MaybeSignal } from "signaloits";
 import { defer, effect, resolve } from "signaloits";
+import type { MaybeSignal } from "signaloits";
 import { mat4 } from "wgpu-matrix";
 
-import { createLayer, type LayerDescriptor, viewLayout } from "./common";
+import { createLayer, viewLayout } from "./common";
+import type { LayerDescriptor } from "./common";
 import { container } from "./container";
 import { createContext } from "./context";
 import type { View } from "./model";

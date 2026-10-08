@@ -1,4 +1,5 @@
-import { defer, type Signal } from "signaloits";
+import { defer } from "signaloits";
+import type { Signal } from "signaloits";
 
 import { createLatest, debounce } from "./common";
 import { enuFromPosition, move, wrapDegDelta } from "./math";

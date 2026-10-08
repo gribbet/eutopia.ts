@@ -1,5 +1,5 @@
-import type { Properties, Signal } from "signaloits";
 import { $, resolve } from "signaloits";
+import type { Properties, Signal } from "signaloits";
 
 import { loadShader, viewLayout } from "../common";
 import type { Context } from "../context";

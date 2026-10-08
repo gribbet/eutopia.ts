@@ -5,20 +5,22 @@ import {
   fill,
   line,
   map,
-  type Mesh,
   object,
-  type PickEvent,
   root,
   signal,
   terrain,
   text,
-  type Vec2,
-  type Vec3,
-  type Vec4,
   vec4Transition,
-  type Vertex as MeshVertex,
-  type View,
   createDevice,
+} from "eutopia.ts";
+import type {
+  Vec4,
+  Vec3,
+  Mesh,
+  Vec2,
+  Vertex as MeshVertex,
+  View,
+  PickEvent,
 } from "eutopia.ts";
 
 const createCubeMesh = (): Mesh => {
