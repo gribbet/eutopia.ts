@@ -164,6 +164,16 @@ fn vertex(@builtin(vertex_index) index: u32) -> VertexOut {
 @fragment
 fn render(input: VertexOut) -> RenderOutput {
     let ray = normalize(input.ray);
+    let ground = sphere_interval(input.camera, ray, RADIUS);
+    let along = dot(input.camera, ray);
+    let perpendicular = input.camera - ray * along;
+    let discriminant = RADIUS * RADIUS - dot(perpendicular, perpendicular);
+    let edgeWidth = max(fwidth(discriminant), 1.0);
+    var groundFade = 1.0;
+    if ground.x > 0.0 && ground.y >= ground.x {
+        groundFade = 1.0 - smoothstep(0.0, edgeWidth, discriminant);
+    }
+
     let sky = sample_sky(input.camera, ray);
     let sun_cosine = dot(ray, input.sun);
     let sun_angle = acos(clamp(sun_cosine, -1.0, 1.0));
@@ -178,7 +188,7 @@ fn render(input: VertexOut) -> RenderOutput {
     let inner_halo = exp(-sun_angle / (0.7 * PI / 180.0));
     let outer_halo = exp(-sun_angle / (2.0 * PI / 180.0));
     let sun_color = vec3<f32>(2.0, 1.85, 1.55) * disk * limb + vec3<f32>(0.13, 0.075, 0.035) * inner_halo + vec3<f32>(0.025, 0.035, 0.06) * outer_halo;
-    let output = sky_render_output(vec4<f32>(sky.rgb + sun_color, sky.a));
+    let output = sky_render_output(vec4<f32>((sky.rgb + sun_color) * groundFade, sky.a * groundFade));
     if output.color.a <= 0.0001 { discard; }
     return output;
 }
