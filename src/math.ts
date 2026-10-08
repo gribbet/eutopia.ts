@@ -58,7 +58,7 @@ export const mercatorFromLonLat = (
   const latRad = (lat * Math.PI) / 180;
   const mx = (lon + 180) / 360;
   const my = 0.5 - Math.log(Math.tan(Math.PI / 4 + latRad / 2)) / tau;
-  return [Math.floor(mx * 2 ** 31), Math.floor(my * 2 ** 31)];
+  return [Math.floor(mx * 2 ** 31), Math.max(0, Math.floor(my * 2 ** 31))];
 };
 
 // Convert a [lon, lat, alt] position to a local East-North-Up displacement
