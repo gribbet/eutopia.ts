@@ -76,7 +76,7 @@ export const createRenderPipeline = ({
   });
   outlineStorage.value = outline;
 
-  const resolution = 21;
+  const resolution = 64;
   const count = resolution + 2;
   const vertices = Array.from({ length: count + 1 }, (_, x) =>
     Array.from({ length: count + 1 }, (_, y) => [
