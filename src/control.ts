@@ -65,7 +65,9 @@ export const createControl = ({
       const [lon, lat, alt] = center;
 
       if (buttons === 1) {
-        const metersPerPixel = distance / 1000;
+        const { height } = element.getBoundingClientRect();
+        if (height === 0) return;
+        const metersPerPixel = (2 * distance * Math.tan(Math.PI / 8)) / height;
 
         const cos = Math.cos(-yaw);
         const sin = Math.sin(-yaw);
