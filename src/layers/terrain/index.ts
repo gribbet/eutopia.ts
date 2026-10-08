@@ -34,14 +34,16 @@ export const terrain = createLayerType<TerrainProps>(
 
     const imageryMap = createTileMapBuffer(device);
 
-    const imagery = $(() =>
-      createTileTextureGroup({
+    const imagery = $(() => {
+      const imagery = createTileTextureGroup({
         context,
         map: imageryMap,
         urlPattern: resolve(imageryUrl),
         mipmap: true,
-      }),
-    );
+      });
+      imagery.ensure([[0, 0, 0]]);
+      return imagery;
+    });
 
     const imageryTextures = $(() => imagery().texture());
 
