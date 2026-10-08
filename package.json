@@ -27,7 +27,7 @@
     "wgpu-matrix": "^3.4.2"
   },
   "devDependencies": {
-    "@gribbet/vite-config": "^1.0.1",
+    "@gribbet/vite-config": "^1.0.3",
     "@webgpu/types": "^0.1.74",
     "cpx2": "^9.0.3",
     "typescript": "^7.0.2",
