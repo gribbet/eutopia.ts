@@ -1,6 +1,8 @@
 import {
   $,
+  atmosphere,
   createControl,
+  createDevice,
   createWorld,
   fill,
   line,
@@ -11,16 +13,15 @@ import {
   terrain,
   text,
   vec4Transition,
-  createDevice,
 } from "eutopia.ts";
 import type {
-  Vec4,
-  Vec3,
   Mesh,
-  Vec2,
   Vertex as MeshVertex,
-  View,
   PickEvent,
+  Vec2,
+  Vec3,
+  Vec4,
+  View,
 } from "eutopia.ts";
 
 const createCubeMesh = (): Mesh => {
@@ -270,6 +271,7 @@ export const createApp = () =>
 
     const layers = $(() => [
       terrain({ imageryUrl, elevationUrl, onClick: onTerrainClick }),
+      atmosphere({}),
       text({ entries: textEntries, polygonOffset: -100 }),
       line({ vertices: staticLineExamples, outline }),
       line({ vertices: lineExamples, outline }),

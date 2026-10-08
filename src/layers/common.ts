@@ -29,7 +29,7 @@ export const createLayerRenderer = ({
   bindGroupLayout: GPUBindGroupLayout;
   buffers?: GPUVertexBufferLayout[];
   constants?: Record<string, GPUPipelineConstantValue>;
-  bindGroup: () => GPUBindGroup;
+  bindGroup: Signal<GPUBindGroup>;
   draw: (pass: GPURenderPassEncoder) => void;
 } & Properties<CommonLayerProps>) => {
   const { device, format, sampleCount } = context;

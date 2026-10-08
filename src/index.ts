@@ -4,6 +4,8 @@ export type { LayerDescriptor } from "./common";
 export { container } from "./container";
 export { createControl } from "./control";
 export * from "./device";
+export { atmosphere } from "./layers/atmosphere";
+export type { AtmosphereProps } from "./layers/atmosphere";
 export { billboard } from "./layers/billboard";
 export { fill } from "./layers/fill";
 export { line } from "./layers/line";

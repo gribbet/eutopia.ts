@@ -8,6 +8,9 @@ const tau = Math.PI * 2;
 
 const earthRadius = 6378137; // meters (WGS-84 semi-major axis)
 
+export const degreesToRadians = (degrees: number) => (degrees * Math.PI) / 180;
+export const radiansToDegrees = (radians: number) => (radians * 180) / Math.PI;
+
 // ---------------------------------------------------------------------------
 // Vector math
 // ---------------------------------------------------------------------------
@@ -46,8 +49,9 @@ export const vec3Scale = ([v0, v1, v2]: Vec3, scale: number): Vec3 => [
 
 export const lonLatFromMercator = (mx: number, my: number): Vec2 => {
   const lon = (mx / 2 ** 31) * 360 - 180;
-  const lat =
-    (Math.atan(Math.sinh((0.5 - my / 2 ** 31) * tau)) * 180) / Math.PI;
+  const lat = radiansToDegrees(
+    Math.atan(Math.sinh((0.5 - my / 2 ** 31) * tau)),
+  );
   return [lon, lat];
 };
 
@@ -55,7 +59,7 @@ export const mercatorFromLonLat = (
   lon: number,
   lat: number,
 ): [number, number] => {
-  const latRad = (lat * Math.PI) / 180;
+  const latRad = degreesToRadians(lat);
   const mx = (lon + 180) / 360;
   const my = 0.5 - Math.log(Math.tan(Math.PI / 4 + latRad / 2)) / tau;
   return [Math.floor(mx * 2 ** 31), Math.max(0, Math.floor(my * 2 ** 31))];
@@ -68,10 +72,10 @@ export const enuFromPosition = (center: Vec3, position: Vec3): Vec3 => {
   const [lon, lat, alt] = position;
 
   const r = earthRadius + centerAlt;
-  const centerLatRad = (centerLat * Math.PI) / 180;
+  const centerLatRad = degreesToRadians(centerLat);
 
-  const dLonRad = (wrapDegDelta(lon - centerLon) * Math.PI) / 180;
-  const dLatRad = ((lat - centerLat) * Math.PI) / 180;
+  const dLonRad = degreesToRadians(wrapDegDelta(lon - centerLon));
+  const dLatRad = degreesToRadians(lat - centerLat);
 
   const x = dLonRad * r * Math.cos(centerLatRad);
   const y = -dLatRad * r;
@@ -89,10 +93,10 @@ export const move = (
   const [x, y, z] = enu;
 
   const r = earthRadius + alt;
-  const latRad = (lat * Math.PI) / 180;
+  const latRad = degreesToRadians(lat);
 
-  const lonDelta = (x / (r * Math.cos(latRad))) * (180 / Math.PI);
-  const latDelta = (y / r) * (180 / Math.PI);
+  const lonDelta = radiansToDegrees(x / (r * Math.cos(latRad)));
+  const latDelta = radiansToDegrees(y / r);
 
   return [lon + lonDelta, lat + latDelta, alt + z];
 };
@@ -102,10 +106,10 @@ export const lngLatDistance = (
   [aLng, aLat, aAlt]: Vec3,
   [bLng, bLat, bAlt]: Vec3,
 ) => {
-  const lat = (((aLat + bLat) / 2) * Math.PI) / 180;
+  const lat = degreesToRadians((aLat + bLat) / 2);
   const dLng = wrapDegDelta(bLng - aLng);
-  const dx = ((dLng * Math.PI) / 180) * earthRadius * Math.cos(lat);
-  const dy = (((bLat - aLat) * Math.PI) / 180) * earthRadius;
+  const dx = degreesToRadians(dLng) * earthRadius * Math.cos(lat);
+  const dy = degreesToRadians(bLat - aLat) * earthRadius;
   const dz = bAlt - aAlt;
   return Math.sqrt(dx * dx + dy * dy + dz * dz);
 };
@@ -240,7 +244,7 @@ export const pickFlat = (
   const [width, height] = size;
   const [, , centerAlt] = center;
 
-  const fov = (fieldOfView / 180) * Math.PI;
+  const fov = degreesToRadians(fieldOfView);
   const fieldScale = Math.tan(Math.PI / 8) / Math.tan(fov / 2);
   const d = distance * fieldScale;
 

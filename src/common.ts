@@ -1,4 +1,4 @@
-import { signal } from "signaloits";
+import { $, signal } from "signaloits";
 import type { Properties, Signal } from "signaloits";
 
 import type { Context } from "./context";
@@ -38,6 +38,15 @@ export const loadShader = (url: URL): Signal<string | undefined> => {
     setCode(await response.text());
   });
   return code;
+};
+
+export const loadShaders = (...urls: URL[]): Signal<string | undefined> => {
+  const shaders = urls.map(loadShader);
+  return $(() => {
+    const codes = shaders.map(shader => shader());
+    if (codes.some(code => code === undefined)) return undefined;
+    return codes.join("\n");
+  });
 };
 
 export const viewLayout = (device: GPUDevice) =>

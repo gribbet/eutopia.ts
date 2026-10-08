@@ -6,6 +6,7 @@ import { createLayer, viewLayout } from "./common";
 import type { LayerDescriptor } from "./common";
 import { container } from "./container";
 import { createContext } from "./context";
+import { degreesToRadians } from "./math";
 import type { View } from "./model";
 import { createMouse } from "./mouse";
 import { createPicker } from "./picker";
@@ -59,7 +60,7 @@ export const createWorld = ({
     const [yaw, pitch, roll] = orientation;
 
     const aspect = width / height;
-    const fov = (fieldOfView / 180) * Math.PI;
+    const fov = degreesToRadians(fieldOfView);
     const fieldScale = Math.tan(Math.PI / 8) / Math.tan(fov / 2);
     const translateDist = distance * fieldScale;
     const near = Math.max(translateDist - distance, distance * 0.001);

@@ -2,7 +2,7 @@ import { $ } from "signaloits";
 import type { Signal } from "signaloits";
 
 import { createBuffer, createDataBuffer } from "../../buffer";
-import { loadShader, viewLayout } from "../../common";
+import { loadShaders, viewLayout } from "../../common";
 
 export const createComputePipeline = ({
   device,
@@ -19,8 +19,10 @@ export const createComputePipeline = ({
   elevationMapBuffer: GPUBuffer;
   elevationTextures: Signal<GPUTexture>;
 }) => {
-  const commonShader = loadShader(new URL("../common.wgsl", import.meta.url));
-  const computeShader = loadShader(new URL("./compute.wgsl", import.meta.url));
+  const shader = loadShaders(
+    new URL("../common.wgsl", import.meta.url),
+    new URL("./compute.wgsl", import.meta.url),
+  );
 
   const layout = device.createBindGroupLayout({
     entries: [
@@ -62,11 +64,10 @@ export const createComputePipeline = ({
   });
 
   const pipeline = $(() => {
-    const commonCode = commonShader();
-    const computeCode = computeShader();
-    if (commonCode === undefined || computeCode === undefined) return undefined;
+    const code = shader();
+    if (code === undefined) return undefined;
     const module = device.createShaderModule({
-      code: commonCode + computeCode,
+      code,
     });
     return device.createComputePipeline({
       layout: pipelineLayout,

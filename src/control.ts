@@ -2,11 +2,17 @@ import { defer } from "signaloits";
 import type { Signal } from "signaloits";
 
 import { createLatest, debounce } from "./common";
-import { enuFromPosition, move, wrapDegDelta } from "./math";
+import {
+  degreesToRadians,
+  enuFromPosition,
+  move,
+  radiansToDegrees,
+  wrapDegDelta,
+} from "./math";
 import type { View } from "./model";
 import type { World } from "./world";
 
-const maxLat = (Math.atan(Math.sinh(Math.PI)) * 180) / Math.PI;
+const maxLat = radiansToDegrees(Math.atan(Math.sinh(Math.PI)));
 
 export const createControl = ({
   element,
@@ -32,7 +38,7 @@ export const createControl = ({
     const { center, distance, orientation, fieldOfView } = view();
     const [yaw, pitch] = orientation;
     const [x, y, z] = enuFromPosition(center, position);
-    const fov = (fieldOfView / 180) * Math.PI;
+    const fov = degreesToRadians(fieldOfView);
     const fieldScale = Math.tan(Math.PI / 8) / Math.tan(fov / 2);
     const zCam =
       z * Math.cos(pitch) -
