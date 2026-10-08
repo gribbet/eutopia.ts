@@ -43,7 +43,7 @@ export type ObjectProps = CommonLayerProps & {
 };
 
 export const object = createLayerType<ObjectProps>(
-  (context, { mesh, instances, depth, polygonOffset }) => {
+  (context, { mesh, instances, ...props }) => {
     const { device, pickRegistry } = context;
 
     const slots = createSlotAllocator(
@@ -89,8 +89,7 @@ export const object = createLayerType<ObjectProps>(
       shader,
       topology: "triangle-list",
       bindGroupLayout,
-      depth,
-      polygonOffset,
+      ...props,
       buffers: [
         {
           arrayStride: 48,

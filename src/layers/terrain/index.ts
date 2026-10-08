@@ -16,96 +16,95 @@ export type TerrainProps = PickHandlers &
     elevationUrl: string;
   };
 
-export const terrain = createLayerType<TerrainProps>((context, props) => {
-  const { imageryUrl, elevationUrl, depth, polygonOffset, outline } = props;
-  const { device, pickRegistry } = context;
+export const terrain = createLayerType<TerrainProps>(
+  (context, { imageryUrl, elevationUrl, ...props }) => {
+    const { device, pickRegistry } = context;
 
-  const tilesBuffer = createDataBuffer(
-    device,
-    GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
-    new Uint32Array(tileTextureLayers * 8),
-  );
+    const tilesBuffer = createDataBuffer(
+      device,
+      GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+      new Uint32Array(tileTextureLayers * 8),
+    );
 
-  const countBuffer = createDataBuffer(
-    device,
-    GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
-    new Uint32Array([0]),
-  );
+    const countBuffer = createDataBuffer(
+      device,
+      GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+      new Uint32Array([0]),
+    );
 
-  const imageryMap = createTileMapBuffer(device);
+    const imageryMap = createTileMapBuffer(device);
 
-  const imagery = $(() =>
-    createTileTextureGroup({
+    const imagery = $(() =>
+      createTileTextureGroup({
+        context,
+        map: imageryMap,
+        urlPattern: resolve(imageryUrl),
+        mipmap: true,
+      }),
+    );
+
+    const imageryTextures = $(() => imagery().texture());
+
+    const elevationMap = createTileMapBuffer(device);
+
+    const elevation = $(() =>
+      createTileTextureGroup({
+        context,
+        map: elevationMap,
+        urlPattern: resolve(elevationUrl),
+        initialDownsample: terrainDownsample,
+      }),
+    );
+
+    const elevationTextures = $(() => elevation().texture());
+
+    const pickId = pickRegistry.allocate(props);
+
+    const computePipeline = createComputePipeline({
+      device,
+      tilesBuffer,
+      countBuffer,
+      imageryMapBuffer: imageryMap.buffer,
+      elevationMapBuffer: elevationMap.buffer,
+      elevationTextures,
+    });
+
+    const renderPipeline = createRenderPipeline({
       context,
-      map: imageryMap,
-      urlPattern: resolve(imageryUrl),
-      mipmap: true,
-    }),
-  );
+      tilesBuffer,
+      countBuffer,
+      imageryTextures,
+      elevationTextures,
+      pickId,
+      ...props,
+    });
 
-  const imageryTextures = $(() => imagery().texture());
+    const compute = (pass: GPUComputePassEncoder) =>
+      computePipeline.compute(pass);
 
-  const elevationMap = createTileMapBuffer(device);
+    const update = (encoder: GPUCommandEncoder) => {
+      imageryMap.update(encoder);
+      elevationMap.update(encoder);
+      renderPipeline.update(encoder);
+    };
 
-  const elevation = $(() =>
-    createTileTextureGroup({
-      context,
-      map: elevationMap,
-      urlPattern: resolve(elevationUrl),
-      initialDownsample: terrainDownsample,
-    }),
-  );
+    const { render, pick } = renderPipeline;
 
-  const elevationTextures = $(() => elevation().texture());
+    const postFrame = () => void updateTiles();
 
-  const pickId = pickRegistry.allocate(props);
+    const updateTiles = async () => {
+      const tiles = await computePipeline.read();
+      if (!tiles) return;
+      elevation().ensure(tiles);
+      imagery().ensure(tiles);
+    };
 
-  const computePipeline = createComputePipeline({
-    device,
-    tilesBuffer,
-    countBuffer,
-    imageryMapBuffer: imageryMap.buffer,
-    elevationMapBuffer: elevationMap.buffer,
-    elevationTextures,
-  });
-
-  const renderPipeline = createRenderPipeline({
-    context,
-    tilesBuffer,
-    countBuffer,
-    imageryTextures,
-    elevationTextures,
-    pickId,
-    outline: resolve(outline) ?? [0, 0, 0, 0],
-    depth: resolve(depth) ?? true,
-    polygonOffset: resolve(polygonOffset),
-  });
-
-  const compute = (pass: GPUComputePassEncoder) =>
-    computePipeline.compute(pass);
-
-  const update = (encoder: GPUCommandEncoder) => {
-    imageryMap.update(encoder);
-    elevationMap.update(encoder);
-    renderPipeline.update(encoder);
-  };
-
-  const { render, pick } = renderPipeline;
-
-  const postFrame = () => void updateTiles();
-
-  const updateTiles = async () => {
-    const tiles = await computePipeline.read();
-    if (!tiles) return;
-    elevation().ensure(tiles);
-    imagery().ensure(tiles);
-  };
-
-  return {
-    compute,
-    update,
-    render,
-    pick,
-    postFrame,
-  };
-});
+    return {
+      compute,
+      update,
+      render,
+      pick,
+      postFrame,
+    };
+  },
+);

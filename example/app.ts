@@ -273,18 +273,9 @@ export const createApp = () =>
       text({ entries: textEntries, polygonOffset: -100 }),
       line({ vertices: staticLineExamples, outline }),
       line({ vertices: lineExamples, outline }),
-      fill({
-        vertices: [
-          { position: [-122.5, 37.7, 10000], color: [1, 0, 0, 0.5] },
-          { position: [-122.3, 37.7, 10000], color: [0, 1, 0, 0.5] },
-          { position: [-122.3, 37.9, 10000], color: [0, 0, 1, 0.5] },
-          { position: [-122.5, 37.9, 10000], color: [1, 1, 0, 0.5] },
-        ],
-        indices: [0, 1, 2, 0, 2, 3],
-      }),
       object({
         mesh: cubeMesh,
-        polygonOffset: -100000,
+        //polygonOffset: -100000,
         instances: [
           {
             position: [-122.4194, 37.7749, 10000],
@@ -295,6 +286,16 @@ export const createApp = () =>
             outline,
           },
         ],
+      }),
+      fill({
+        vertices: [
+          { position: [-122.5, 37.7, 10000], color: [1, 0, 0, 0.5] },
+          { position: [-122.3, 37.7, 10000], color: [0, 1, 0, 0.5] },
+          { position: [-122.3, 37.9, 10000], color: [0, 0, 1, 0.5] },
+          { position: [-122.5, 37.9, 10000], color: [1, 1, 0, 0.5] },
+        ],
+        indices: [0, 1, 2, 0, 2, 3],
+        depthWrite: false,
       }),
     ]);
 

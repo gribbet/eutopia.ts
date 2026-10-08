@@ -152,7 +152,7 @@ const earcut = (
 };
 
 export const polygon = createLayerType<PolygonProps>(
-  (context, { rings, color, depth, polygonOffset, ...pickHandlers }) => {
+  (context, { rings, color, ...props }) => {
     const [fillVertices, setFillVertices] = signal<
       { position: Vec3; color: Vec4 }[]
     >([]);
@@ -171,11 +171,9 @@ export const polygon = createLayerType<PolygonProps>(
     return createLayer(
       context,
       fill({
-        ...pickHandlers,
+        ...props,
         vertices: fillVertices,
         indices,
-        depth,
-        polygonOffset,
       }),
     );
   },

@@ -1,4 +1,5 @@
-import { $, effect } from "signaloits";
+import type { MaybeSignal } from "signaloits";
+import { $, effect, resolve } from "signaloits";
 
 import { createDataBuffer } from "../../buffer";
 import { loadShader } from "../../common";
@@ -6,7 +7,6 @@ import type { Context } from "../../context";
 import type { Vec4 } from "../../model";
 import { buffer, u32, vec4f } from "../../storage";
 import { createLayerRenderer } from "../common";
-import type { CommonLayerProps } from "../common";
 
 export const createRenderPipeline = ({
   context,
@@ -16,8 +16,7 @@ export const createRenderPipeline = ({
   elevationTextures,
   pickId,
   outline,
-  depth,
-  polygonOffset,
+  ...props
 }: {
   context: Context;
   tilesBuffer: GPUBuffer;
@@ -25,9 +24,10 @@ export const createRenderPipeline = ({
   imageryTextures: () => GPUTexture;
   elevationTextures: () => GPUTexture;
   pickId: () => number;
-  outline: Vec4;
-  depth?: boolean;
-  polygonOffset?: CommonLayerProps["polygonOffset"];
+  outline?: MaybeSignal<Vec4 | undefined>;
+  depth?: MaybeSignal<boolean | undefined>;
+  depthWrite?: MaybeSignal<boolean | undefined>;
+  polygonOffset?: MaybeSignal<number | undefined>;
 }) => {
   const { device } = context;
   const shader = loadShader(new URL("./render.wgsl", import.meta.url));
@@ -75,7 +75,7 @@ export const createRenderPipeline = ({
   const outlineStorage = buffer(vec4f(), device, {
     usage: GPUBufferUsage.UNIFORM,
   });
-  outlineStorage.value = outline;
+  outlineStorage.value = resolve(outline) ?? [0, 0, 0, 0];
 
   const resolution = 64;
   const count = resolution + 2;
@@ -149,8 +149,7 @@ export const createRenderPipeline = ({
     ],
     topology: "triangle-list",
     shader,
-    depth,
-    polygonOffset,
+    ...props,
     bindGroup,
     draw: (pass: GPURenderPassEncoder) => {
       pass.setVertexBuffer(0, verticesBuffer);

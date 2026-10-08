@@ -6,6 +6,7 @@ import type { Context } from "../context";
 
 export type CommonLayerProps = {
   depth?: boolean;
+  depthWrite?: boolean;
   polygonOffset?: number;
 };
 
@@ -17,6 +18,7 @@ export const createLayerRenderer = ({
   buffers,
   constants,
   depth,
+  depthWrite,
   polygonOffset,
   bindGroup,
   draw,
@@ -29,7 +31,7 @@ export const createLayerRenderer = ({
   constants?: Record<string, GPUPipelineConstantValue>;
   bindGroup: () => GPUBindGroup;
   draw: (pass: GPURenderPassEncoder) => void;
-} & Pick<Properties<CommonLayerProps>, "depth" | "polygonOffset">) => {
+} & Properties<CommonLayerProps>) => {
   const { device, format, sampleCount } = context;
 
   const commonShader = loadShader(new URL("./common.wgsl", import.meta.url));
@@ -50,7 +52,7 @@ export const createLayerRenderer = ({
     const depthEnabled = resolve(depth) ?? true;
     return {
       format: "depth24plus" as const,
-      depthWriteEnabled: depthEnabled,
+      depthWriteEnabled: resolve(depthWrite) ?? depthEnabled,
       depthCompare: depthEnabled ? "less" : "always",
       depthBias: resolve(polygonOffset) ?? 0,
     } satisfies GPUDepthStencilState;

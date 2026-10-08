@@ -34,7 +34,7 @@ export type BillboardProps = CommonLayerProps & {
 };
 
 export const billboard = createLayerType<BillboardProps>(
-  (context, { billboards, depth, polygonOffset }) => {
+  (context, { billboards, ...commonProps }) => {
     const { device, pickRegistry } = context;
 
     const slots = createSlotAllocator(
@@ -123,8 +123,7 @@ export const billboard = createLayerType<BillboardProps>(
       shader,
       topology: "triangle-strip",
       bindGroupLayout,
-      depth,
-      polygonOffset,
+      ...commonProps,
       bindGroup,
       draw: pass => {
         const count = slots.count();
