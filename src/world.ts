@@ -1,4 +1,4 @@
-import { defer, effect, resolve } from "signaloits";
+import { defer, effect, resolve, root } from "signaloits";
 import type { MaybeSignal } from "signaloits";
 import { mat4 } from "wgpu-matrix";
 
@@ -29,103 +29,108 @@ export const createWorld = ({
   view,
   layers,
 }: WorldProperties) => {
-  const context = createContext(element, device);
-  const { size, textureLoader, pickRegistry } = context;
+  const world = root(dispose => {
+    const context = createContext(element, device);
+    const { size, textureLoader, pickRegistry } = context;
 
-  const renderer = createRenderer(context);
-  const picker = createPicker(context);
-  const { pick } = picker;
+    const renderer = createRenderer(context);
+    const picker = createPicker(context);
+    const { pick } = picker;
 
-  const viewUniform = buffer(
-    struct({
-      center: position(),
-      projection: mat4f(),
-      screenSize: vec2f(),
-      distance: f32(),
-    }),
-    device,
-    { usage: GPUBufferUsage.UNIFORM },
-  );
+    const viewUniform = buffer(
+      struct({
+        center: position(),
+        projection: mat4f(),
+        screenSize: vec2f(),
+        distance: f32(),
+      }),
+      device,
+      { usage: GPUBufferUsage.UNIFORM },
+    );
 
-  const layout = viewLayout(device);
+    const layout = viewLayout(device);
 
-  const bindGroup = device.createBindGroup({
-    layout,
-    entries: [{ binding: 0, resource: { buffer: viewUniform.buffer() } }],
-  });
-
-  const projection = mat4.identity();
-  effect(() => {
-    const [width, height] = size();
-    const { center, distance, orientation, fieldOfView } = resolve(view);
-    const [yaw, pitch, roll] = orientation;
-
-    const aspect = width / height;
-    const fov = degreesToRadians(fieldOfView);
-    const fieldScale = Math.tan(Math.PI / 8) / Math.tan(fov / 2);
-    const translateDist = distance * fieldScale;
-    const near = Math.max(translateDist - distance, distance * 0.001);
-    const far = Math.hypot(translateDist, distance * 100);
-
-    mat4.perspective(fov, aspect, near, far, projection);
-
-    mat4.translate(projection, [0, 0, -translateDist], projection);
-    mat4.rotateY(projection, roll, projection);
-    mat4.rotateX(projection, pitch, projection);
-    mat4.rotateZ(projection, -yaw, projection);
-
-    viewUniform.value.center = center;
-    viewUniform.value.projection = projection;
-    viewUniform.value.screenSize = [width, height];
-    viewUniform.value.distance = distance;
-  });
-
-  const root = createLayer(context, container({ layers }));
-
-  const { isDragging } = createMouse({ element, pick, pickRegistry, view });
-
-  let running = true;
-  const frame = (t: number) => {
-    if (!running) return;
-    setNow(t);
-    viewUniform.flush();
-
-    const encoder = device.createCommandEncoder();
-
-    const compute = encoder.beginComputePass();
-    compute.setBindGroup(0, bindGroup);
-    root.compute?.(compute);
-    compute.end();
-
-    root.update?.(encoder);
-
-    textureLoader.update();
-
-    renderer.render(encoder, pass => {
-      pass.setBindGroup(0, bindGroup);
-      root.render(pass);
+    const bindGroup = device.createBindGroup({
+      layout,
+      entries: [{ binding: 0, resource: { buffer: viewUniform.buffer() } }],
     });
 
-    picker.encode(encoder, pass => {
-      pass.setBindGroup(0, bindGroup);
-      root.pick?.(pass);
+    const projection = mat4.identity();
+    effect(() => {
+      const [width, height] = size();
+      const { center, distance, orientation, fieldOfView } = resolve(view);
+      const [yaw, pitch, roll] = orientation;
+
+      const aspect = width / height;
+      const fov = degreesToRadians(fieldOfView);
+      const fieldScale = Math.tan(Math.PI / 8) / Math.tan(fov / 2);
+      const translateDist = distance * fieldScale;
+      const near = Math.max(translateDist - distance, distance * 0.001);
+      const far = Math.hypot(translateDist, distance * 100);
+
+      mat4.perspective(fov, aspect, near, far, projection);
+
+      mat4.translate(projection, [0, 0, -translateDist], projection);
+      mat4.rotateY(projection, roll, projection);
+      mat4.rotateX(projection, pitch, projection);
+      mat4.rotateZ(projection, -yaw, projection);
+
+      viewUniform.value.center = center;
+      viewUniform.value.projection = projection;
+      viewUniform.value.screenSize = [width, height];
+      viewUniform.value.distance = distance;
     });
 
-    device.queue.submit([encoder.finish()]);
+    const root = createLayer(context, container({ layers }));
 
-    root.postFrame?.();
-    picker.postFrame();
+    const { isDragging } = createMouse({ element, pick, pickRegistry, view });
 
+    let running = true;
+    const frame = (t: number) => {
+      if (!running) return;
+      setNow(t);
+      viewUniform.flush();
+
+      const encoder = device.createCommandEncoder();
+
+      const compute = encoder.beginComputePass();
+      compute.setBindGroup(0, bindGroup);
+      root.compute?.(compute);
+      compute.end();
+
+      root.update?.(encoder);
+
+      textureLoader.update();
+
+      renderer.render(encoder, pass => {
+        pass.setBindGroup(0, bindGroup);
+        root.render(pass);
+      });
+
+      picker.encode(encoder, pass => {
+        pass.setBindGroup(0, bindGroup);
+        root.pick?.(pass);
+      });
+
+      device.queue.submit([encoder.finish()]);
+
+      root.postFrame?.();
+      picker.postFrame();
+
+      requestAnimationFrame(frame);
+    };
     requestAnimationFrame(frame);
-  };
-  requestAnimationFrame(frame);
 
-  defer(() => {
-    running = false;
+    defer(() => {
+      running = false;
+    });
+
+    return {
+      pick,
+      isDragging,
+      dispose,
+    };
   });
-
-  return {
-    pick,
-    isDragging,
-  };
+  defer(world.dispose);
+  return world;
 };
