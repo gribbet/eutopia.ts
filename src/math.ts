@@ -81,7 +81,7 @@ export const enuFromPosition = (center: Vec3, position: Vec3): Vec3 => {
   const dLatRad = degreesToRadians(lat - centerLat);
 
   const x = dLonRad * r * Math.cos(centerLatRad);
-  const y = -dLatRad * r;
+  const y = dLatRad * r;
   const z = alt - centerAlt;
 
   return [x, y, z];
