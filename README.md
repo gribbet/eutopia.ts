@@ -49,11 +49,12 @@ const vertices = [
   ),
 ];
 
+const time = $(() => new Date(performance.timeOrigin + now() * 10000));
+
 createWorld({
   element,
   device,
   view,
-  layers: [atmosphere({ time: $(() => now() * 10000) }), line({ vertices })],
+  layers: [atmosphere({ time }), line({ vertices })],
 });
-
 ```
