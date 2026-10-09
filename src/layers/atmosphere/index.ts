@@ -7,7 +7,7 @@ import { createComputePipeline } from "./compute";
 import { createRenderPipeline } from "./render";
 import { atmosphereSun } from "./sun";
 
-const skySize = 128;
+const skySize = 64;
 
 export type AtmosphereProps = {
   time?: number;
