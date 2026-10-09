@@ -2,10 +2,7 @@ import { degreesToRadians } from "../../math";
 import type { Vec4 } from "../../model";
 
 export const atmosphereSun = (timestamp: number): Vec4 => {
-  if (!Number.isFinite(timestamp))
-    throw new RangeError("Atmosphere time must be a finite Unix timestamp");
-
-  const days = timestamp / 86400 - 10957.5;
+  const days = timestamp / 86_400_000 - 10957.5;
   const centuries = days / 36525;
   const meanLongitude = degreesToRadians((280.46 + 0.9856474 * days) % 360);
   const meanAnomaly = degreesToRadians((357.528 + 0.9856003 * days) % 360);
