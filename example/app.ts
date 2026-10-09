@@ -263,6 +263,14 @@ export const createApp = () =>
           outline,
           minScale: 0.25,
           maxScale: 1.0,
+          onClick: () => {
+            const { id, test } = item();
+            setItems(
+              items().map(entry =>
+                entry.id === id ? { ...entry, test: !test } : entry,
+              ),
+            );
+          },
           onDrag: (event: PickEvent) => updatePosition(event.position),
         };
       },
