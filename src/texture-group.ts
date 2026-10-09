@@ -6,6 +6,8 @@ import { createMipmaps } from "./image-process";
 import { createLru } from "./lru";
 import { createTexture } from "./texture";
 
+const retryDelay = 5_000;
+
 export const createTextureGroup = ({
   context,
   layers = tileTextureLayers,
@@ -51,7 +53,7 @@ export const createTextureGroup = ({
   type Entry = {
     index?: number;
     cancel?: () => void;
-    failed?: boolean;
+    failed?: number;
   };
   const mapping = createLru<string, Entry>({
     maxSize: layers,
@@ -121,7 +123,7 @@ export const createTextureGroup = ({
       release(index);
       if (signal.aborted) return;
 
-      mapping.set(key, { failed: true });
+      mapping.set(key, { failed: Date.now() + retryDelay });
       console.warn("Failed to load texture", error);
     }
   };
@@ -141,12 +143,12 @@ export const createTextureGroup = ({
 
   const ensureOne = (key: string) => {
     const current = mapping.get(key);
-    if (current?.failed) return;
+    if (current?.failed && current.failed > Date.now()) return;
     if (current?.index !== undefined) return mapping.set(key, current);
 
     const index = acquire();
     if (index === undefined) {
-      mapping.set(key, { index });
+      mapping.set(key, current?.failed ? current : { index });
       return;
     }
 
