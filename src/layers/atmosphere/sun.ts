@@ -1,8 +1,8 @@
 import { degreesToRadians } from "../../math";
 import type { Vec4 } from "../../model";
 
-export const atmosphereSun = (timestamp: number): Vec4 => {
-  const days = timestamp / 86_400_000 - 10957.5;
+export const atmosphereSun = (time: Date): Vec4 => {
+  const days = time.getTime() / 86_400_000 - 10957.5;
   const centuries = days / 36525;
   const meanLongitude = degreesToRadians((280.46 + 0.9856474 * days) % 360);
   const meanAnomaly = degreesToRadians((357.528 + 0.9856003 * days) % 360);

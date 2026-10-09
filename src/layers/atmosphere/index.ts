@@ -10,7 +10,7 @@ import { atmosphereSun } from "./sun";
 const skySize = 64;
 
 export type AtmosphereProps = {
-  time?: number;
+  time?: Date;
 };
 
 export const atmosphere = createLayerType<AtmosphereProps>(
@@ -35,7 +35,7 @@ export const atmosphere = createLayerType<AtmosphereProps>(
     const render = createRenderPipeline({ context, sun: sun.buffer, sky });
 
     const compute = (pass: GPUComputePassEncoder) => {
-      sun.value = atmosphereSun(resolve(time) ?? Date.now() / 1000);
+      sun.value = atmosphereSun(resolve(time) ?? new Date());
       sun.flush();
       computePipeline(pass);
     };
