@@ -13,7 +13,7 @@ fn tile_elevation(tile: vec3<u32>) -> f32 {
     let h = index_hash(tile, size);
     let cached = elevation_cache[h];
     if all(cached.key == tile) {
-        return f32(cached.value) / 100.0;
+        return bitcast<f32>(cached.value);
     }
     let index = lookup(tile, &elevation_map);
     if index.x == 0xffffffffu {
@@ -21,7 +21,7 @@ fn tile_elevation(tile: vec3<u32>) -> f32 {
     }
     let elevation = sample_elevation(elevation_textures, tile, vec2<f32>(), index);
     if index.y == 0 {
-        elevation_cache[h] = MapEntry(tile, u32(elevation * 100.0));
+        elevation_cache[h] = MapEntry(tile, bitcast<u32>(elevation));
     }
     return elevation;
 }
