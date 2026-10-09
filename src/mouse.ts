@@ -118,6 +118,7 @@ export const createMouse = ({
   const onPointerDown = async (event: PointerEvent) => {
     const [x, y] = pointerPosition(event);
     const { pointerId, button } = event;
+    element.setPointerCapture(pointerId);
     setIsDragging(true);
     const picked = await readPickEvent([x, y]);
     if (!picked.id) {
