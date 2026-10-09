@@ -100,6 +100,7 @@ export const createTextureGroup = ({
 
       if (ensureSize(width, height)) {
         release(index);
+        ensureOne(key);
         return;
       }
 
@@ -126,11 +127,14 @@ export const createTextureGroup = ({
   };
 
   const ensure = (keys: readonly string[]) => {
-    keys = keys.slice(0, layers);
-    const current = new Set(keys);
+    const current = new Set(mapping.keys());
+    keys = [...keys]
+      .sort((a, b) => Number(current.has(b)) - Number(current.has(a)))
+      .slice(0, layers);
+    const requested = new Set(keys);
     mapping
       .entries()
-      .filter(([key]) => !current.has(key))
+      .filter(([key]) => !requested.has(key))
       .forEach(([, { cancel }]) => cancel?.());
     keys.forEach(ensureOne);
   };

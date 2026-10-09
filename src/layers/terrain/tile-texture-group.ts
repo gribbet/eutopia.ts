@@ -89,7 +89,7 @@ export const createTileTextureGroup = ({
       tiles.map(_ => downsample(_, initialDownsample)).filter(_ => !!_),
     );
     textureGroup.ensure(
-      unique([...tiles, ...descendants(parents(tiles))])
+      descendants(tiles)
         .filter(([, , z]) => z <= maxZ)
         .map(xyz => toKey(xyz).toString()),
     );
@@ -112,4 +112,4 @@ const parents = (tiles: readonly Vec3[]) =>
   unique(tiles.map(_ => downsample(_, 1)).filter(_ => !!_));
 
 const descendants: (tiles: readonly Vec3[]) => Vec3[] = tiles =>
-  tiles.length > 0 ? unique([...descendants(parents(tiles)), ...tiles]) : [];
+  tiles.length > 0 ? unique([...tiles, ...descendants(parents(tiles))]) : [];
