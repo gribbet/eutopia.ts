@@ -89,11 +89,14 @@ export const createComputePipeline = ({
     usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
   });
 
-  const elevationCacheBuffer = createDataBuffer(
-    device,
-    GPUBufferUsage.STORAGE,
-    new Uint32Array(4 * 16376).fill(0xffffffff),
-  );
+  const elevationCacheBuffer = $(() => {
+    void elevationTextures();
+    return createDataBuffer(
+      device,
+      GPUBufferUsage.STORAGE,
+      new Uint32Array(4 * 16376).fill(0xffffffff),
+    );
+  });
 
   const bindGroup = $(() =>
     device.createBindGroup({
@@ -101,7 +104,7 @@ export const createComputePipeline = ({
       entries: [
         { binding: 0, resource: { buffer: tilesBuffer } },
         { binding: 1, resource: { buffer: countBuffer } },
-        { binding: 2, resource: { buffer: elevationCacheBuffer } },
+        { binding: 2, resource: { buffer: elevationCacheBuffer() } },
         { binding: 3, resource: { buffer: imageryMapBuffer } },
         { binding: 4, resource: { buffer: elevationMapBuffer } },
         {
