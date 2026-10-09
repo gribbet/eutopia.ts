@@ -2,6 +2,7 @@ import { mipLevelCount } from "../../configuration";
 import type { Context } from "../../context";
 import { loadImage } from "../../image-load";
 import { cropImage } from "../../image-process";
+import { createLru } from "../../lru";
 import type { Vec3 } from "../../model";
 import { createTextureGroup } from "../../texture-group";
 import { fromKey, toKey } from "./common";
@@ -34,6 +35,7 @@ export const createTileTextureGroup = ({
     onEvict: key => map.clear(fromKey(Number(key))),
   });
   const { texture } = textureGroup;
+  const images = createLru<string, ImageBitmap>({ maxSize: 1024 });
 
   const tileUrl = (x: number, y: number, z: number) =>
     urlPattern
@@ -41,8 +43,17 @@ export const createTileTextureGroup = ({
       .replace("{x}", x.toString())
       .replace("{y}", y.toString());
 
+  const loadTileImageUrl = async (url: string, signal?: AbortSignal) => {
+    const cached = images.get(url);
+    if (cached) return cached;
+
+    const image = await loadImage(url, signal);
+    images.set(url, image);
+    return image;
+  };
+
   const loadTileImage = async ([x, y, z]: Vec3, signal?: AbortSignal) => {
-    const image = await loadImage(tileUrl(x, y, z), signal);
+    const image = await loadTileImageUrl(tileUrl(x, y, z), signal);
     return [image];
   };
 
@@ -79,7 +90,7 @@ export const createTileTextureGroup = ({
   const loadTileMipmaps = (tile: Vec3, signal: AbortSignal) =>
     Promise.all(
       computeMipSources(tile).map(async ({ url, crop }) => {
-        const image = await loadImage(url, signal);
+        const image = await loadTileImageUrl(url, signal);
         return crop ? await cropImage(image, crop) : image;
       }),
     );
