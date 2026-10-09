@@ -1,3 +1,5 @@
+import { defer } from "signaloits";
+
 import { mipLevelCount } from "../../configuration";
 import type { Context } from "../../context";
 import { loadImage } from "../../image-load";
@@ -35,7 +37,11 @@ export const createTileTextureGroup = ({
     onEvict: key => map.clear(fromKey(Number(key))),
   });
   const { texture } = textureGroup;
-  const images = createLru<string, ImageBitmap>({ maxSize: 1024 });
+  const images = createLru<string, ImageBitmap>({
+    maxSize: 1024,
+    onEvict: (_url, image) => image.close(),
+  });
+  defer(() => images.clear());
 
   const tileUrl = (x: number, y: number, z: number) =>
     urlPattern
