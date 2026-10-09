@@ -14,12 +14,6 @@ import type { Vec3, Vec4, View } from "./model";
 
 export const [now, setNow] = signal(performance.now());
 
-const tick = (t: number) => {
-  setNow(t);
-  requestAnimationFrame(tick);
-};
-requestAnimationFrame(tick);
-
 export const atFrame = <T>(source: Signal<T>) =>
   $(() => {
     now();

@@ -12,6 +12,7 @@ import { createMouse } from "./mouse";
 import { createPicker } from "./picker";
 import { createRenderer } from "./renderer";
 import { buffer, f32, mat4f, position, struct, vec2f } from "./storage";
+import { setNow } from "./transition";
 
 export type World = ReturnType<typeof createWorld>;
 
@@ -84,8 +85,9 @@ export const createWorld = ({
   const { isDragging } = createMouse({ element, pick, pickRegistry, view });
 
   let running = true;
-  const frame = () => {
+  const frame = (t: number) => {
     if (!running) return;
+    setNow(t);
     viewUniform.flush();
 
     const encoder = device.createCommandEncoder();
