@@ -2,7 +2,7 @@ import { $, resolve } from "signaloits";
 
 import { createDataBuffer } from "../../buffer";
 import { createLayerType } from "../../common";
-import { terrainDownsample, tileTextureLayers } from "../../configuration";
+import { terrainDownsample } from "../../configuration";
 import type { PickHandlers } from "../../pick-registry";
 import type { CommonLayerProps } from "../common";
 import { createComputePipeline } from "./compute";
@@ -20,10 +20,11 @@ export const terrain = createLayerType<TerrainProps>(
   (context, { imageryUrl, elevationUrl, ...props }) => {
     const { device, pickRegistry } = context;
 
+    const maxTiles = 1024;
     const tilesBuffer = createDataBuffer(
       device,
       GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
-      new Uint32Array(tileTextureLayers * 8),
+      new Uint32Array(maxTiles * 8),
     );
 
     const countBuffer = createDataBuffer(
