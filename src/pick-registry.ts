@@ -34,16 +34,15 @@ export type PickRegistry = ReturnType<typeof createPickRegistry>;
 
 export const createPickRegistry = () => {
   let nextId = 1;
-  const freeList: number[] = [];
   const handlers = new Map<number, Properties<PickHandlers>>();
   const [draggingId, setDraggingId] = signal(0);
 
   const allocate = (entry: Properties<PickHandlers>) => {
-    const id = freeList.length > 0 ? freeList.pop()! : nextId++;
+    if (nextId > 0xfffffffe) throw new Error("Pick ID space exhausted");
+    const id = nextId++;
     handlers.set(id, entry);
     defer(() => {
       handlers.delete(id);
-      freeList.push(id);
     });
     return $(() =>
       resolve(entry.pickable) !== false && draggingId() !== id ? id : 0,
