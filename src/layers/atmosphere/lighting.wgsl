@@ -26,7 +26,8 @@ fn render(input: VertexOut) -> RenderOutput {
     let surface = normalize(input.camera + ray * ground.x);
     let sunlit = smoothstep(-0.15, 0.15, dot(surface, input.sun));
     let color = mix(vec3<f32>(0.004, 0.008, 0.025), vec3<f32>(0.12, 0.22, 0.36), sunlit);
-    let zoom = smoothstep(20000.0, 160000.0, view.distance);
+    let altitude = length(input.camera) - RADIUS;
+    let zoom = smoothstep(20000.0, 80000.0, altitude);
     let alpha = 0.55 * zoom;
     if alpha <= 0.0001 { discard; }
 
