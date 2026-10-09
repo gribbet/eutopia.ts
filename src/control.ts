@@ -58,7 +58,7 @@ export const createControl = ({
       if (world.isDragging()) return;
       void recenter();
     },
-    { signal },
+    { signal, capture: true },
   );
 
   element.addEventListener(
