@@ -16,7 +16,6 @@ import {
   createWorld,
   line,
   now,
-  root,
 } from "eutopia.ts";
 import type { Vec3, Vec4, View } from "eutopia.ts";
 
@@ -50,13 +49,11 @@ const vertices = [
   ),
 ];
 
-root(dispose => {
-  createWorld({
-    element,
-    device,
-    view,
-    layers: [atmosphere({ time: $(() => now() * 20) }), line({ vertices })],
-  });
-  return { dispose };
+createWorld({
+  element,
+  device,
+  view,
+  layers: [atmosphere({ time: $(() => now() * 10000) }), line({ vertices })],
 });
+
 ```
