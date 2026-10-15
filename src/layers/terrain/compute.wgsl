@@ -5,7 +5,7 @@
 @group(1) @binding(4) var<storage, read> elevation_map: array<MapEntry>;
 @group(1) @binding(5) var elevation_textures: texture_2d_array<f32>;
 
-const SUBDIVIDE_PIXEL_THRESHOLD = 384.0;
+const SUBDIVIDE_PIXEL_RATIO = 1.5;
 const VIEW_MARGIN = 1.2;
 
 fn tile_elevation(tile: vec3<u32>) -> f32 {
@@ -46,6 +46,8 @@ fn screen(v: vec4<f32>) -> vec3<f32> {
 
 @compute @workgroup_size(1)
 fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
+    let terrain_size = textureDimensions(elevation_textures);
+    let subdivide_pixel_threshold = f32(max(256u, max(terrain_size.x, terrain_size.y))) * SUBDIVIDE_PIXEL_RATIO;
     var stack: array<vec3<u32>, 256>;
     var index = 1u;
     var total = 0u;
@@ -92,7 +94,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
 
             let span = n_max - n_min;
             let pixels = span.xy * view.screen_size / 2.0;
-            subdivide = max(pixels.x, pixels.y) > SUBDIVIDE_PIXEL_THRESHOLD;
+            subdivide = max(pixels.x, pixels.y) > subdivide_pixel_threshold;
         }
 
         if subdivide && z <= 22u {
