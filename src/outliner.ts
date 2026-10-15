@@ -6,16 +6,9 @@ import { createTexture } from "./texture";
 
 const outlineTextureFormat: GPUTextureFormat = "rgba8unorm";
 
-type TextureSize = () => readonly [number, number];
-
-export const createOutliner = ({
-  context,
-  textureSize,
-}: {
-  context: Context;
-  textureSize: TextureSize;
-}) => {
-  const { device, devicePixelRatio, format, sampleCount } = context;
+export const createOutliner = (context: Context) => {
+  const { device, devicePixelRatio, format, sampleCount, textureSize } =
+    context;
   const shader = loadShader(new URL("./outliner.wgsl", import.meta.url));
 
   const outlineTexture = $(() =>

@@ -30,7 +30,7 @@ export const createRenderer = (context: Context) => {
   const renderView = () => renderTexture().createView();
   const depthView = () => depthTexture().createView();
 
-  const outliner = createOutliner({ context, textureSize });
+  const outliner = createOutliner(context);
 
   const render = (encoder: GPUCommandEncoder, draw: Renderer) => {
     const canvasView = context.context.getCurrentTexture().createView();
