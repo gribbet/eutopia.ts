@@ -1,7 +1,7 @@
 import { $, resolve } from "signaloits";
 import type { Properties, Signal } from "signaloits";
 
-import { loadShader, viewLayout } from "../common";
+import { alphaBlend, loadShader, viewLayout } from "../common";
 import type { Context } from "../context";
 
 export type CommonLayerProps = {
@@ -39,14 +39,6 @@ export const createLayerRenderer = ({
   const pipelineLayout = device.createPipelineLayout({
     bindGroupLayouts: [viewLayout(device), bindGroupLayout],
   });
-
-  const alphaBlend: GPUBlendState = {
-    color: {
-      srcFactor: "src-alpha",
-      dstFactor: "one-minus-src-alpha",
-    },
-    alpha: { srcFactor: "one", dstFactor: "one-minus-src-alpha" },
-  };
 
   const depthStencil = $((): GPUDepthStencilState => {
     const depthEnabled = resolve(depth) ?? true;

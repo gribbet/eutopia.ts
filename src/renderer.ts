@@ -18,15 +18,6 @@ export const createRenderer = (context: Context) => {
     }),
   );
 
-  const sceneTexture = $(() =>
-    createTexture(device, {
-      size: [...textureSize()],
-      format,
-      usage:
-        GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
-    }),
-  );
-
   const depthTexture = $(() =>
     createTexture(device, {
       size: [...textureSize()],
@@ -37,17 +28,17 @@ export const createRenderer = (context: Context) => {
   );
 
   const renderView = () => renderTexture().createView();
-  const sceneView = () => sceneTexture().createView();
   const depthView = () => depthTexture().createView();
 
-  const outliner = createOutliner({ context, textureSize, sceneTexture });
+  const outliner = createOutliner({ context, textureSize });
 
   const render = (encoder: GPUCommandEncoder, draw: Renderer) => {
+    const canvasView = context.context.getCurrentTexture().createView();
     const pass = encoder.beginRenderPass({
       colorAttachments: [
         {
           view: renderView(),
-          resolveTarget: sceneView(),
+          resolveTarget: canvasView,
           loadOp: "clear",
           storeOp: "discard",
         },

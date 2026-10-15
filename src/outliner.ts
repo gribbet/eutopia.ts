@@ -1,6 +1,6 @@
 import { $ } from "signaloits";
 
-import { loadShader } from "./common";
+import { alphaBlend, loadShader } from "./common";
 import type { Context } from "./context";
 import { createTexture } from "./texture";
 
@@ -11,11 +11,9 @@ type TextureSize = () => readonly [number, number];
 export const createOutliner = ({
   context,
   textureSize,
-  sceneTexture,
 }: {
   context: Context;
   textureSize: TextureSize;
-  sceneTexture: () => GPUTexture;
 }) => {
   const { device, devicePixelRatio, format, sampleCount } = context;
   const shader = loadShader(new URL("./outliner.wgsl", import.meta.url));
@@ -48,11 +46,6 @@ export const createOutliner = ({
       {
         binding: 1,
         visibility: GPUShaderStage.FRAGMENT,
-        texture: {},
-      },
-      {
-        binding: 2,
-        visibility: GPUShaderStage.FRAGMENT,
         sampler: {},
       },
     ],
@@ -78,7 +71,12 @@ export const createOutliner = ({
         module,
         entryPoint: "fragment",
         constants: { ["device_pixel_ratio"]: devicePixelRatio },
-        targets: [{ format }],
+        targets: [
+          {
+            format,
+            blend: alphaBlend,
+          },
+        ],
       },
     });
   });
@@ -87,9 +85,8 @@ export const createOutliner = ({
     device.createBindGroup({
       layout: bindGroupLayout,
       entries: [
-        { binding: 0, resource: sceneTexture().createView() },
-        { binding: 1, resource: resolvedOutlineTexture().createView() },
-        { binding: 2, resource: outlineSampler },
+        { binding: 0, resource: resolvedOutlineTexture().createView() },
+        { binding: 1, resource: outlineSampler },
       ],
     }),
   );
@@ -109,7 +106,7 @@ export const createOutliner = ({
       colorAttachments: [
         {
           view: context.context.getCurrentTexture().createView(),
-          loadOp: "clear",
+          loadOp: "load",
           storeOp: "store",
         },
       ],

@@ -3,6 +3,14 @@ import type { Properties, Signal } from "signaloits";
 
 import type { Context } from "./context";
 
+export const alphaBlend: GPUBlendState = {
+  color: {
+    srcFactor: "src-alpha",
+    dstFactor: "one-minus-src-alpha",
+  },
+  alpha: { srcFactor: "one", dstFactor: "one-minus-src-alpha" },
+};
+
 export type Layer = {
   compute?: (pass: GPUComputePassEncoder) => void;
   update?: (encode: GPUCommandEncoder) => void;
