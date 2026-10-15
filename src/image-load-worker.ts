@@ -2,7 +2,7 @@ import { limit } from "./common";
 
 export type Data = ["load" | "cancel", string];
 
-const acquire = limit(16);
+const acquire = limit(8);
 
 const onMessage = async (event: MessageEvent) => {
   const [action, url] = event.data as Data;
@@ -13,31 +13,33 @@ const onMessage = async (event: MessageEvent) => {
   addEventListener(
     "message",
     (event: MessageEvent) => {
-      const [evAction, _] = event.data as Data;
-      if (evAction === "cancel" && _ === url) abortController.abort();
+      const [evAction, target] = event.data as Data;
+      if (evAction === "cancel" && target === url) abortController.abort();
     },
     { signal },
   );
   await acquire(async () => {
     try {
-      if (signal.aborted) return;
-
+      signal.throwIfAborted();
       const response = await fetch(url, { mode: "cors", signal });
       if (!response.ok) {
         postMessage({ url });
         return;
       }
-
       const blob = await response.blob();
+      signal.throwIfAborted();
       const image = await createImageBitmap(blob);
-
-      // @ts-expect-error Transferable
-      postMessage({ url, image }, [image]);
-    } catch (error) {
-      if (!(error instanceof Error)) throw error;
-      if (error.name === "AbortError") return;
-      else if (error.message === "Failed to fetch") return postMessage({ url });
-      throw error;
+      try {
+        signal.throwIfAborted();
+        // @ts-expect-error Worker transfer-list overload is absent from the DOM types.
+        postMessage({ url, image }, [image]);
+      } catch (error) {
+        image.close();
+        throw error;
+      }
+    } catch {
+      if (signal.aborted) return;
+      postMessage({ url, image: undefined });
     } finally {
       abortController.abort();
     }
