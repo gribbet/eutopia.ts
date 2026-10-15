@@ -82,8 +82,12 @@ export const terrain = createLayerType<TerrainProps>(
       ...props,
     });
 
-    const compute = (pass: GPUComputePassEncoder) =>
+    let skipCompute = true;
+    const compute = (pass: GPUComputePassEncoder) => {
+      skipCompute = !skipCompute;
+      if (skipCompute) return;
       computePipeline.compute(pass);
+    };
 
     const update = (encoder: GPUCommandEncoder) => {
       imageryMap.update(encoder);
