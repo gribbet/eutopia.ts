@@ -60,7 +60,7 @@ fn render(input: VertexOut) -> RenderOutput {
     let texel_scale = size * device_pixel_ratio / f32(k);
     let dx = length(uv_dx * texel_scale);
     let dy = length(uv_dy * texel_scale);
-    let lod = max(0.5 * (log2(dx) + log2(dy)) + 0.5, 0.0);
+    let lod = max(0.5 * (log2(dx) + log2(dy)), 0.0);
     let color = textureSampleLevel(imagery_textures, sample, uv, index.x, lod);
     return RenderOutput(color, vec4(outline.rgb, outline.a * color.a));
 }

@@ -5,8 +5,8 @@
 @group(1) @binding(4) var<storage, read> elevation_map: array<MapEntry>;
 @group(1) @binding(5) var elevation_textures: texture_2d_array<f32>;
 
-const SUBDIVIDE_PIXEL_RATIO = 1.5;
-const VIEW_MARGIN = 1.2;
+const SUBDIVIDE_PIXEL_RATIO = 1.0;
+const VIEW_MARGIN = 1.0;
 
 fn tile_elevation(tile: vec3<u32>) -> f32 {
     let size = arrayLength(&elevation_cache);
@@ -74,9 +74,8 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
         let cz = vec4<f32>(c1.z, c2.z, c3.z, c4.z);
         let cw = vec4<f32>(c1.w, c2.w, c3.w, c4.w);
 
-        let outside_view = all(cx > cw) || all(cx < -cw) || all(cy > cw) || all(cy < -cw) || all(cz > cw) || all(cz < vec4(0.0)) || all(cw <= vec4(0.0));
-        let outside_margin = all(cx > cw * VIEW_MARGIN) || all(cx < -cw * VIEW_MARGIN) || all(cy > cw * VIEW_MARGIN) || all(cy < -cw * VIEW_MARGIN) || all(cz > cw) || all(cz < vec4(0.0)) || all(cw <= vec4(0.0));
-        if !inside && outside_margin {
+        let outside_view = all(cx > cw * VIEW_MARGIN) || all(cx < -cw * VIEW_MARGIN) || all(cy > cw * VIEW_MARGIN) || all(cy < -cw * VIEW_MARGIN) || all(cz > cw) || all(cz < vec4(0.0)) || all(cw <= vec4(0.0));
+        if !inside && outside_view {
             continue;
         }
 
@@ -106,10 +105,6 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             index++;
             stack[index] = vec3<u32>(2 * x, 2 * y + 1, z + 1);
             index++;
-            continue;
-        }
-
-        if outside_view {
             continue;
         }
 
