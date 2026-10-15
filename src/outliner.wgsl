@@ -38,7 +38,7 @@ fn outline_sample(xy: vec2<f32>) -> vec4<f32> {
 fn fragment(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
     let xy = vec2<i32>(position.xy);
     let outline_xy = vec2<f32>(xy);
-    let center = textureLoad(outline_texture, xy, 0);
+    let center = outline_sample(outline_xy);
 
     let radius = 1.5 * device_pixel_ratio;
     var outline = vec4<f32>(0.0);
