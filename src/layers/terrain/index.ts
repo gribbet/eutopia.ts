@@ -89,7 +89,10 @@ export const terrain = createLayerType<TerrainProps>(
       computePipeline.compute(pass);
     };
 
+    let oddFrame = true;
     const update = (encoder: GPUCommandEncoder) => {
+      oddFrame = !oddFrame;
+      if (oddFrame) return;
       imageryMap.update(encoder);
       elevationMap.update(encoder);
       renderPipeline.update(encoder);
@@ -100,6 +103,7 @@ export const terrain = createLayerType<TerrainProps>(
     const postFrame = () => void updateTiles();
 
     const updateTiles = async () => {
+      if (oddFrame) return;
       const tiles = await computePipeline.read();
       if (!tiles) return;
       elevation().ensure(tiles);
