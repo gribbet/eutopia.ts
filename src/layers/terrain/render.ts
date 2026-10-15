@@ -29,7 +29,7 @@ export const createRenderPipeline = ({
   depthWrite?: MaybeSignal<boolean | undefined>;
   polygonOffset?: MaybeSignal<number | undefined>;
 }) => {
-  const { device } = context;
+  const { device, devicePixelRatio } = context;
   const shader = loadShader(new URL("./render.wgsl", import.meta.url));
 
   const bindGroupLayout = device.createBindGroupLayout({
@@ -148,6 +148,7 @@ export const createRenderPipeline = ({
       },
     ],
     topology: "triangle-list",
+    constants: { device_pixel_ratio: devicePixelRatio },
     shader,
     ...props,
     bindGroup,

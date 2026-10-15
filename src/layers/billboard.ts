@@ -2,7 +2,6 @@ import { $, defer, effect, map, resolve, signal } from "signaloits";
 import type { Properties } from "signaloits";
 
 import { createLayerType, loadShader } from "../common";
-import { loadImage } from "../image-load";
 import type { Vec2, Vec3, Vec4 } from "../model";
 import type { PickHandlers } from "../pick-registry";
 import {
@@ -16,6 +15,7 @@ import {
   vec4f,
 } from "../storage";
 import { createTextureGroup } from "../texture-group";
+import { loadTextureImage } from "../texture-loader";
 import { createLayerRenderer } from "./common";
 import type { CommonLayerProps } from "./common";
 
@@ -66,7 +66,7 @@ export const billboard = createLayerType<BillboardProps>(
 
     const textureGroup = createTextureGroup({
       context,
-      load: async (url, signal) => [await loadImage(url, signal)],
+      load: async (url, signal) => [await loadTextureImage(url, signal)],
       onLoad: (url, index, width, height) =>
         setImageMetadata({
           ...imageMetadata(),

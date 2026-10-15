@@ -2,22 +2,24 @@ import { defer, signal } from "signaloits";
 
 import { mipLevelCount, tileTextureLayers } from "./configuration";
 import type { Context } from "./context";
-import { createMipmaps } from "./image-process";
 import { createLru } from "./lru";
 import { createTexture } from "./texture";
+import type { TextureImage } from "./texture-loader";
 
 const retryDelay = 5_000;
 
 export const createTextureGroup = ({
   context,
   layers = tileTextureLayers,
+  mipmap = true,
   load,
   onLoad,
   onEvict,
 }: {
   context: Context;
   layers?: number;
-  load: (key: string, signal: AbortSignal) => Promise<readonly ImageBitmap[]>;
+  mipmap?: boolean;
+  load: (key: string, signal: AbortSignal) => Promise<readonly TextureImage[]>;
   onLoad?: (key: string, index: number, width: number, height: number) => void;
   onEvict?: (key: string, index: number) => void;
 }) => {
@@ -27,10 +29,12 @@ export const createTextureGroup = ({
     createTexture(device, {
       size: [width, height, layers],
       format: "rgba8unorm",
-      mipLevelCount: Math.min(
-        mipLevelCount,
-        Math.floor(Math.log2(Math.max(width, height))) + 1,
-      ),
+      mipLevelCount: mipmap
+        ? Math.min(
+            mipLevelCount,
+            Math.floor(Math.log2(Math.max(width, height))) + 1,
+          )
+        : 1,
       usage:
         GPUTextureUsage.TEXTURE_BINDING |
         GPUTextureUsage.COPY_DST |
@@ -79,26 +83,14 @@ export const createTextureGroup = ({
     return false;
   };
 
-  const normalizeImages = async (source: readonly ImageBitmap[]) => {
-    const levels = texture().mipLevelCount;
-    const images = source.slice(0, levels);
-
-    const last = images[images.length - 1];
-    if (last && images.length < levels) {
-      const remaining = await createMipmaps(last, levels - images.length + 1);
-      return [...images, ...remaining.slice(1)];
-    }
-
-    return images;
-  };
-
   const doLoad = async (key: string, index: number, signal: AbortSignal) => {
     try {
       const source = await load(key, signal);
+      signal.throwIfAborted();
       const [first] = source;
       if (!first) throw new Error(`Texture loader returned no images: ${key}`);
 
-      const { width, height } = first;
+      const [width, height] = first.size;
 
       if (ensureSize(width, height)) {
         release(index);
@@ -106,18 +98,24 @@ export const createTextureGroup = ({
         return;
       }
 
-      const images = await normalizeImages(source);
-      signal.throwIfAborted();
+      const target = texture();
+      const images = source.slice(0, target.mipLevelCount);
 
       await Promise.all(
-        images.map((_, mip) =>
-          textureLoader.load(texture(), _, mip, index, signal),
+        images.map((image, mipLevel) =>
+          textureLoader.load(
+            target,
+            image,
+            mipLevel,
+            index,
+            mipLevel === images.length - 1,
+            signal,
+          ),
         ),
       );
       signal.throwIfAborted();
 
       mapping.set(key, { index });
-
       onLoad?.(key, index, width, height);
     } catch (error) {
       release(index);

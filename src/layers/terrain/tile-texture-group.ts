@@ -2,11 +2,11 @@ import { defer } from "signaloits";
 
 import { mipLevelCount } from "../../configuration";
 import type { Context } from "../../context";
-import { loadImage } from "../../image-load";
-import { cropImage } from "../../image-process";
 import { createLru } from "../../lru";
 import type { Vec3 } from "../../model";
 import { createTextureGroup } from "../../texture-group";
+import { loadTextureImage } from "../../texture-loader";
+import type { TextureImage } from "../../texture-loader";
 import { fromKey, toKey } from "./common";
 import type { TileMapBuffer } from "./tile-map-buffer";
 
@@ -27,6 +27,7 @@ export const createTileTextureGroup = ({
 }) => {
   const textureGroup = createTextureGroup({
     context,
+    mipmap,
     load: (key, signal) => {
       const tile = fromKey(Number(key));
       return mipmap
@@ -37,9 +38,9 @@ export const createTileTextureGroup = ({
     onEvict: key => map.clear(fromKey(Number(key))),
   });
   const { texture } = textureGroup;
-  const images = createLru<string, ImageBitmap>({
+  const images = createLru<string, TextureImage>({
     maxSize: 1024,
-    onEvict: (_url, image) => image.close(),
+    onEvict: (_url, { image }) => image.close(),
   });
   defer(() => images.clear());
 
@@ -53,7 +54,7 @@ export const createTileTextureGroup = ({
     const cached = images.get(url);
     if (cached) return cached;
 
-    const image = await loadImage(url, signal);
+    const image = await loadTextureImage(url, signal);
     images.set(url, image);
     return image;
   };
@@ -92,18 +93,22 @@ export const createTileTextureGroup = ({
 
   const loadTileMipmaps = (tile: Vec3, signal: AbortSignal) =>
     Promise.all(
-      computeMipSources(tile).map(async ({ url, crop }) => {
-        const image = await loadTileImageUrl(url, signal);
-        if (!crop) return image;
-        const width = image.width / crop.scale;
-        const height = image.height / crop.scale;
-        return cropImage(image, {
-          x: crop.x * width,
-          y: crop.y * height,
-          width,
-          height,
-        });
-      }),
+      computeMipSources(tile).map(
+        async ({ url, crop }): Promise<TextureImage> => {
+          const source = await loadTileImageUrl(url, signal);
+          if (!crop) return source;
+          const { x, y, scale } = crop;
+          const { image, size } = source;
+          const [imageWidth, imageHeight] = size;
+          const width = imageWidth / scale;
+          const height = imageHeight / scale;
+          return {
+            image,
+            origin: [x * width, y * height],
+            size: [width, height],
+          };
+        },
+      ),
     );
 
   const ensure = (tiles: readonly Vec3[]) => {

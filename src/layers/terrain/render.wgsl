@@ -5,6 +5,8 @@
 @group(1) @binding(4) var<uniform> pick_id: u32;
 @group(1) @binding(5) var<uniform> outline: vec4<f32>;
 
+override device_pixel_ratio: f32 = 1.0;
+
 struct VertexIn {
     @builtin(instance_index) instance_index: u32,
     @location(0) uvw: vec3<u32>,
@@ -44,6 +46,8 @@ fn vertex(input: VertexIn) -> VertexOut {
 
 @fragment
 fn render(input: VertexOut) -> RenderOutput {
+    let uv_dx = dpdx(input.uv);
+    let uv_dy = dpdy(input.uv);
     let i = input.instance_index;
     let tile = tiles[i].tile;
     let index = tiles[i].imagery_texture;
@@ -52,10 +56,11 @@ fn render(input: VertexOut) -> RenderOutput {
     }
     let k = 1u << index.y;
     let uv = (vec2<f32>(tile.xy & vec2<u32>(k - 1u)) + input.uv) / f32(k);
-    let size = vec2<f32>(textureDimensions(imagery_textures).xy);
-    let dx = dpdx(uv * size);
-    let dy = dpdy(uv * size);
-    let lod = max(0.5 * (log2(length(dx)) + log2(length(dy))) + 1.0, 0.0);
+    let size = vec2<f32>(textureDimensions(imagery_textures));
+    let texel_scale = size * device_pixel_ratio / f32(k);
+    let dx = length(uv_dx * texel_scale);
+    let dy = length(uv_dy * texel_scale);
+    let lod = max(0.5 * (log2(dx) + log2(dy)) + 0.5, 0.0);
     let color = textureSampleLevel(imagery_textures, sample, uv, index.x, lod);
     return RenderOutput(color, vec4(outline.rgb, outline.a * color.a));
 }

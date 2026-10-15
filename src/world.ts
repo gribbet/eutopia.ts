@@ -100,7 +100,7 @@ export const createWorld = ({
 
       root.update?.(encoder);
 
-      textureLoader.update();
+      textureLoader.update(encoder);
 
       renderer.render(encoder, pass => {
         pass.setBindGroup(0, bindGroup);
