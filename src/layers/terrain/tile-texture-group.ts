@@ -65,7 +65,7 @@ export const createTileTextureGroup = ({
 
   type MipSource = {
     url: string;
-    crop?: { x: number; y: number; width: number; height: number };
+    crop?: { x: number; y: number; scale: number };
   };
   const computeMipSources = ([x, y, z]: Vec3): MipSource[] =>
     Array.from({ length: mipLevelCount }, (_, m) => {
@@ -73,8 +73,6 @@ export const createTileTextureGroup = ({
       if (ancestorZ < 0) return [];
       if (m === 0) return [{ url: tileUrl(x, y, z) }];
       const scale = 2 ** m;
-      const tileSize = 256;
-      const size = tileSize / scale;
       const url = tileUrl(
         Math.floor(x / scale),
         Math.floor(y / scale),
@@ -84,10 +82,9 @@ export const createTileTextureGroup = ({
         {
           url,
           crop: {
-            x: (x % scale) * size,
-            y: (y % scale) * size,
-            width: size,
-            height: size,
+            x: x % scale,
+            y: y % scale,
+            scale,
           },
         },
       ];
@@ -97,7 +94,15 @@ export const createTileTextureGroup = ({
     Promise.all(
       computeMipSources(tile).map(async ({ url, crop }) => {
         const image = await loadTileImageUrl(url, signal);
-        return crop ? await cropImage(image, crop) : image;
+        if (!crop) return image;
+        const width = image.width / crop.scale;
+        const height = image.height / crop.scale;
+        return cropImage(image, {
+          x: crop.x * width,
+          y: crop.y * height,
+          width,
+          height,
+        });
       }),
     );
 
