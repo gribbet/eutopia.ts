@@ -2,8 +2,15 @@
 @group(1) @binding(1) var imagery_textures: texture_2d_array<f32>;
 @group(1) @binding(2) var elevation_textures: texture_2d_array<f32>;
 @group(1) @binding(3) var sample: sampler;
-@group(1) @binding(4) var<uniform> pick_id: u32;
-@group(1) @binding(5) var<uniform> outline: vec4<f32>;
+
+struct TerrainUniforms {
+    color: vec4<f32>,
+    saturation: f32,
+    outline: vec4<f32>,
+    pick_id: u32,
+};
+
+@group(1) @binding(4) var<uniform> uniforms: TerrainUniforms;
 
 struct VertexIn {
     @builtin(instance_index) instance_index: u32,
@@ -58,11 +65,14 @@ fn render(input: VertexOut) -> RenderOutput {
     let dx = length(uv_dx * scale);
     let dy = length(uv_dy * scale);
     let lod = max(0.5 * (log2(dx) + log2(dy)), 0.0);
-    let color = textureSampleLevel(imagery_textures, sample, uv, index.x, lod);
-    return RenderOutput(color, vec4(outline.rgb, outline.a * color.a));
+    let tinted = textureSampleLevel(imagery_textures, sample, uv, index.x, lod) * uniforms.color;
+    let luminance = dot(tinted.rgb, vec3<f32>(0.2126, 0.7152, 0.0722));
+    let rgb = mix(vec3<f32>(luminance), tinted.rgb, max(uniforms.saturation, 0.0));
+    let color = vec4<f32>(clamp(rgb, vec3<f32>(0.0), vec3<f32>(1.0)), tinted.a);
+    return RenderOutput(color, vec4(uniforms.outline.rgb, uniforms.outline.a * color.a));
 }
 
 @fragment
 fn pick(input: VertexOut) -> PickOutput {
-    return pack_pick(input.local, pick_id);
+    return pack_pick(input.local, uniforms.pick_id);
 }

@@ -5,7 +5,7 @@ import { createDataBuffer } from "../../buffer";
 import { loadShader } from "../../common";
 import type { Context } from "../../context";
 import type { Vec4 } from "../../model";
-import { buffer, u32, vec4f } from "../../storage";
+import { buffer, f32, struct, u32, vec4f } from "../../storage";
 import { createLayerRenderer } from "../common";
 
 export const createRenderPipeline = ({
@@ -16,6 +16,8 @@ export const createRenderPipeline = ({
   elevationTextures,
   pickId,
   outline,
+  color,
+  saturation,
   ...props
 }: {
   context: Context;
@@ -25,6 +27,8 @@ export const createRenderPipeline = ({
   elevationTextures: () => GPUTexture;
   pickId: () => number;
   outline?: MaybeSignal<Vec4 | undefined>;
+  color?: MaybeSignal<Vec4 | undefined>;
+  saturation?: MaybeSignal<number | undefined>;
   depth?: MaybeSignal<boolean | undefined>;
   depthWrite?: MaybeSignal<boolean | undefined>;
   polygonOffset?: MaybeSignal<number | undefined>;
@@ -59,23 +63,31 @@ export const createRenderPipeline = ({
         visibility: GPUShaderStage.FRAGMENT,
         buffer: { type: "uniform" },
       },
-      {
-        binding: 5,
-        visibility: GPUShaderStage.FRAGMENT,
-        buffer: { type: "uniform" },
-      },
     ],
   });
 
-  const pickStorage = buffer(u32(), device, { usage: GPUBufferUsage.UNIFORM });
+  const uniforms = buffer(
+    struct({
+      color: vec4f(),
+      saturation: f32(),
+      outline: vec4f(),
+      pickId: u32(),
+    }),
+    device,
+    { usage: GPUBufferUsage.UNIFORM },
+  );
   effect(() => {
-    pickStorage.value = pickId();
+    uniforms.value.color = resolve(color) ?? [1, 1, 1, 1];
   });
-
-  const outlineStorage = buffer(vec4f(), device, {
-    usage: GPUBufferUsage.UNIFORM,
+  effect(() => {
+    uniforms.value.saturation = resolve(saturation) ?? 1;
   });
-  outlineStorage.value = resolve(outline) ?? [0, 0, 0, 0];
+  effect(() => {
+    uniforms.value.outline = resolve(outline) ?? [0, 0, 0, 0];
+  });
+  effect(() => {
+    uniforms.value.pickId = pickId();
+  });
 
   const resolution = 64;
   const count = resolution + 2;
@@ -132,8 +144,7 @@ export const createRenderPipeline = ({
           resource: elevationTextures().createView({ dimension: "2d-array" }),
         },
         { binding: 3, resource: sampler },
-        { binding: 4, resource: { buffer: pickStorage.buffer() } },
-        { binding: 5, resource: { buffer: outlineStorage.buffer() } },
+        { binding: 4, resource: { buffer: uniforms.buffer() } },
       ],
     }),
   );
@@ -160,8 +171,7 @@ export const createRenderPipeline = ({
 
   const update = (encoder: GPUCommandEncoder) => {
     encoder.copyBufferToBuffer(countBuffer, 0, indirectBuffer, 4, 4);
-    pickStorage.flush();
-    outlineStorage.flush();
+    uniforms.flush();
   };
 
   return {

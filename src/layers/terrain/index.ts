@@ -3,6 +3,7 @@ import { $, resolve } from "signaloits";
 import { createDataBuffer } from "../../buffer";
 import { createLayerType } from "../../common";
 import { terrainDownsample } from "../../configuration";
+import type { Vec4 } from "../../model";
 import type { PickHandlers } from "../../pick-registry";
 import type { CommonLayerProps } from "../common";
 import { createComputePipeline } from "./compute";
@@ -14,6 +15,8 @@ export type TerrainProps = PickHandlers &
   CommonLayerProps & {
     imageryUrl: string;
     elevationUrl: string;
+    color?: Vec4;
+    saturation?: number;
   };
 
 export const terrain = createLayerType<TerrainProps>(
