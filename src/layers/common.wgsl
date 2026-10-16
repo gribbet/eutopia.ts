@@ -119,7 +119,7 @@ struct Tile {
 
 fn tile_split_threshold(imagery_textures: texture_2d_array<f32>) -> f32 {
     let size = textureDimensions(imagery_textures);
-    return f32(max(256u, max(size.x, size.y))) * sqrt(2.0);
+    return f32(max(256u, max(size.x, size.y))) * sqrt(2.0) * 1.5;
 }
 
 fn sample_elevation(elevation_textures: texture_2d_array<f32>, tile: vec3<u32>, uv: vec2<f32>, index: vec2<u32>) -> f32 {

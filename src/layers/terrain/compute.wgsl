@@ -8,7 +8,7 @@
 
 override device_pixel_ratio: f32 = 1.0;
 
-const VIEW_MARGIN = 1.2;
+const VIEW_MARGIN = 1.1;
 
 fn tile_elevation(tile: vec3<u32>) -> f32 {
     let size = arrayLength(&elevation_cache);
