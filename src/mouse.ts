@@ -8,20 +8,15 @@ import type { PickResult } from "./picker";
 
 type Gesture = {
   targetId: number;
-  startX: number;
-  startY: number;
+  start: Vec2;
   button: number;
   dragging: boolean;
-  allowDrag: boolean;
-  allowDragFlat: boolean;
-  flatAltitude: number;
+  draggable: boolean;
+  flatAltitude?: number;
 };
 
-type PendingMove = {
-  x: number;
-  y: number;
-  pointerId: number;
-};
+const hasMoved = ({ start: [startX, startY] }: Gesture, { x, y }: PickEvent) =>
+  (x - startX) ** 2 + (y - startY) ** 2 > 3 ** 2;
 
 export const createMouse = ({
   element,
@@ -37,177 +32,142 @@ export const createMouse = ({
   const [isDragging, setIsDragging] = createSignal(false);
   const abortController = new AbortController();
   const { signal } = abortController;
+  let gesture: Gesture | undefined;
+  let pendingMove: Vec2 | undefined;
+  let processingMove = false;
 
-  const dragThresholdSquared = 6 ** 2;
-  const gestures = new Map<number, Gesture>();
-
-  const pointerPosition = (event: { clientX: number; clientY: number }) => {
+  const pointerPosition = (event: PointerEvent): Vec2 => {
     const { left, top } = element.getBoundingClientRect();
-    return [event.clientX - left, event.clientY - top] as const;
+    return [event.clientX - left, event.clientY - top];
   };
 
-  const readPickEvent = async ([x, y]: Vec2) => ({
+  const readPickEvent = async ([x, y]: Vec2): Promise<PickEvent> => ({
     ...(await pick([x, y])),
     x,
     y,
   });
 
-  const flatPickEvent = (
-    gesture: Pick<Gesture, "targetId" | "flatAltitude">,
-    x: number,
-    y: number,
-  ): PickEvent | undefined => {
+  const drag = (gesture: Gesture, picked: PickEvent) => {
+    if (!gesture.draggable) return;
+    if (!gesture.dragging) {
+      if (!hasMoved(gesture, picked)) return;
+      gesture.dragging = true;
+      pickRegistry.onDragStart(picked, gesture.targetId);
+    }
+    pickRegistry.onDrag(picked, gesture.targetId);
+
+    if (gesture.flatAltitude === undefined) return;
+    const { x, y } = picked;
     const { width, height } = element.getBoundingClientRect();
     const position = pickFlat(x, y, gesture.flatAltitude, resolve(view), [
       width,
       height,
     ]);
-    if (!position) return;
-    return { position, id: gesture.targetId, x, y };
+    if (position)
+      pickRegistry.onDragFlat({ ...picked, position }, gesture.targetId);
   };
 
-  const pendingMoves = new Map<number, PendingMove>();
-  let processingMove = false;
-
-  const processPointerMove = async () => {
+  const onPointerMove = async (event: PointerEvent) => {
+    if (!event.isPrimary) return;
+    pendingMove = pointerPosition(event);
     if (processingMove) return;
     processingMove = true;
-
     try {
-      const moves = [...pendingMoves.values()];
-      pendingMoves.clear();
-      for (const { x, y, pointerId } of moves) {
-        const picked = await readPickEvent([x, y]);
+      while (pendingMove) {
+        const xy = pendingMove;
+        const currentGesture = gesture;
+        pendingMove = undefined;
+        const picked = await readPickEvent(xy);
         if (picked.id) pickRegistry.onMouseMove(picked);
-
-        const gesture = gestures.get(pointerId);
-        if (!gesture) continue;
-
-        const dx = x - gesture.startX;
-        const dy = y - gesture.startY;
-        const moved = dx ** 2 + dy ** 2 > dragThresholdSquared;
-
-        if (
-          !gesture.dragging &&
-          moved &&
-          (gesture.allowDrag || gesture.allowDragFlat)
-        ) {
-          gesture.dragging = true;
-          if (gesture.allowDrag)
-            pickRegistry.onDragStart(picked, gesture.targetId);
-          else if (gesture.allowDragFlat) {
-            const flatEvent = flatPickEvent(gesture, x, y);
-            if (flatEvent)
-              pickRegistry.onDragStart(flatEvent, gesture.targetId);
-          }
-        }
-        if (gesture.dragging) {
-          if (gesture.allowDrag) pickRegistry.onDrag(picked, gesture.targetId);
-          if (gesture.allowDragFlat) {
-            const flatEvent = flatPickEvent(gesture, x, y);
-            if (flatEvent) pickRegistry.onDragFlat(flatEvent, gesture.targetId);
-          }
-        }
+        if (currentGesture && gesture === currentGesture)
+          drag(currentGesture, picked);
       }
     } finally {
       processingMove = false;
-      if (pendingMoves.size) void processPointerMove();
     }
   };
 
   const onPointerDown = async (event: PointerEvent) => {
-    const [x, y] = pointerPosition(event);
+    if (!event.isPrimary) return;
+    const start = pointerPosition(event);
     const { pointerId, button } = event;
     element.setPointerCapture(pointerId);
     setIsDragging(true);
-    const picked = await readPickEvent([x, y]);
+    const picked = await readPickEvent(start);
     if (!picked.id) {
-      setIsDragging(false);
-      gestures.delete(pointerId);
+      endGesture();
       return;
     }
 
-    pickRegistry.onMouseDown(picked);
-
-    const hasDrag =
-      pickRegistry.hasHandler(picked.id, "onDragStart") ||
-      pickRegistry.hasHandler(picked.id, "onDragFlat") ||
-      pickRegistry.hasHandler(picked.id, "onDrag");
-
-    if (!hasDrag) setIsDragging(false);
-
-    const allowDrag = button === 0 && hasDrag;
-
-    const [, , flatAltitude] = picked.position;
-
-    gestures.set(pointerId, {
+    const hasFlatDrag = pickRegistry.hasHandler(picked.id, "onDragFlat");
+    const draggable =
+      button === 0 &&
+      (hasFlatDrag ||
+        pickRegistry.hasHandler(picked.id, "onDrag") ||
+        pickRegistry.hasHandler(picked.id, "onDragStart"));
+    gesture = {
       targetId: picked.id,
-      startX: x,
-      startY: y,
+      start,
       button,
       dragging: false,
-      allowDrag,
-      allowDragFlat:
-        button === 0 && pickRegistry.hasHandler(picked.id, "onDragFlat"),
-      flatAltitude,
-    });
+      draggable,
+      flatAltitude: hasFlatDrag ? picked.position[2] : undefined,
+    };
+    setIsDragging(gesture.draggable);
+    pickRegistry.onMouseDown(picked);
   };
 
-  const onPointerMove = (event: PointerEvent) => {
-    const [x, y] = pointerPosition(event);
-    const { pointerId } = event;
-    pendingMoves.set(pointerId, { x, y, pointerId });
-    if (!processingMove) void processPointerMove();
+  const endGesture = () => {
+    const previous = gesture;
+    gesture = undefined;
+    pendingMove = undefined;
+    setIsDragging(false);
+    return previous;
   };
 
-  const onPointerUp = async (event: PointerEvent) => {
-    const [x, y] = pointerPosition(event);
-    const { pointerId } = event;
-
-    const picked = await readPickEvent([x, y]);
-    if (picked.id) pickRegistry.onMouseUp(picked);
-
-    const gesture = gestures.get(pointerId);
+  const onPointerUp = async (event: PointerEvent, cancelled = false) => {
+    if (!event.isPrimary) return;
+    const picked = await readPickEvent(pointerPosition(event));
+    const gesture = endGesture();
+    if (!cancelled && picked.id) pickRegistry.onMouseUp(picked);
     if (!gesture) return;
 
-    const dx = x - gesture.startX;
-    const dy = y - gesture.startY;
-    const moved = dx ** 2 + dy ** 2 > dragThresholdSquared;
-
-    if (gesture.dragging) {
-      if (gesture.allowDrag) pickRegistry.onDragEnd(picked, gesture.targetId);
-      else if (gesture.allowDragFlat) {
-        const flatEvent = flatPickEvent(gesture, x, y);
-        if (flatEvent) pickRegistry.onDragEnd(flatEvent, gesture.targetId);
-      }
-    } else if (!moved && picked.id === gesture.targetId && gesture.button === 0)
-      pickRegistry.onClick(picked, gesture.targetId);
-    else if (!moved && picked.id === gesture.targetId && gesture.button === 2)
-      pickRegistry.onRightClick(picked, gesture.targetId);
-
-    setIsDragging(false);
-    gestures.delete(pointerId);
+    if (gesture.dragging) pickRegistry.onDragEnd(picked, gesture.targetId);
+    else if (
+      !cancelled &&
+      !hasMoved(gesture, picked) &&
+      picked.id === gesture.targetId
+    ) {
+      if (gesture.button === 0) pickRegistry.onClick(picked, gesture.targetId);
+      if (gesture.button === 2)
+        pickRegistry.onRightClick(picked, gesture.targetId);
+    }
   };
-
-  const onContextMenu = (event: MouseEvent) => event.preventDefault();
 
   element.addEventListener("pointerdown", event => void onPointerDown(event), {
     signal,
   });
-  element.addEventListener("pointermove", onPointerMove, { signal });
+  element.addEventListener("pointermove", event => void onPointerMove(event), {
+    signal,
+  });
   element.addEventListener("pointerup", event => void onPointerUp(event), {
     signal,
   });
-  element.addEventListener("pointercancel", event => void onPointerUp(event), {
-    signal,
-  });
-  element.addEventListener("contextmenu", onContextMenu, {
+  element.addEventListener(
+    "pointercancel",
+    event => void onPointerUp(event, true),
+    {
+      signal,
+    },
+  );
+  element.addEventListener("contextmenu", event => event.preventDefault(), {
     signal,
   });
 
   defer(() => {
     abortController.abort();
-    pendingMoves.clear();
+    gesture = undefined;
+    pendingMove = undefined;
   });
 
   return { isDragging };
