@@ -117,6 +117,11 @@ struct Tile {
     elevation_texture: vec2<u32>,
 }
 
+fn tile_split_threshold(imagery_textures: texture_2d_array<f32>) -> f32 {
+    let size = textureDimensions(imagery_textures);
+    return f32(max(256u, max(size.x, size.y))) * sqrt(2.0);
+}
+
 fn sample_elevation(elevation_textures: texture_2d_array<f32>, tile: vec3<u32>, uv: vec2<f32>, index: vec2<u32>) -> f32 {
     if index.x == 0xffffffffu {
         return 0.0;

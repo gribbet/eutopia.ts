@@ -3,14 +3,7 @@
 
 override device_pixel_ratio: f32 = 1.0;
 
-const DIRECTIONS = array(
-    vec2<f32>(-1.0, 0.0),
-    vec2<f32>(1.0, 0.0),
-    vec2<f32>(-0.5, -0.866),
-    vec2<f32>(0.5, 0.866),
-    vec2<f32>(0.5, -0.866),
-    vec2<f32>(-0.5, 0.866)
-);
+const OUTLINE_WIDTH: f32 = 1.5;
 
 struct Vertex {
     @builtin(position) position: vec4<f32>,
@@ -28,34 +21,24 @@ fn vertex(@builtin(vertex_index) index: u32) -> Vertex {
     return output;
 }
 
-fn outline_sample(xy: vec2<f32>) -> vec4<f32> {
-    let size = vec2<f32>(textureDimensions(outline_texture));
-    let uv = (xy + vec2<f32>(0.5)) / size;
-    return textureSampleLevel(outline_texture, outline_sampler, uv, 0.0);
+fn stronger(a: vec4<f32>, b: vec4<f32>) -> vec4<f32> {
+    // Keep the first sample on equal alpha.
+    return select(a, b, b.a > a.a);
 }
 
 @fragment
-fn fragment(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
-    let xy = vec2<i32>(position.xy);
-    let outline_xy = vec2<f32>(xy);
-    let center = outline_sample(outline_xy);
+fn fragment(input: Vertex) -> @location(0) vec4<f32> {
+    let texel = 1.0 / vec2<f32>(textureDimensions(outline_texture));
+    let uv = input.position.xy * texel;
+    let radius = OUTLINE_WIDTH * device_pixel_ratio * texel;
+    let outside = 1.0 - textureLoad(outline_texture, vec2<i32>(input.position.xy), 0).a;
 
-    let radius = 1.5 * device_pixel_ratio;
-    var outline = vec4<f32>(0.0);
-    var alpha = 0.0;
+    let a = textureSampleLevel(outline_texture, outline_sampler, uv + vec2(radius.x, 0.0), 0.0);
+    let b = textureSampleLevel(outline_texture, outline_sampler, uv + vec2(0.309017, 0.951057) * radius, 0.0);
+    let c = textureSampleLevel(outline_texture, outline_sampler, uv + vec2(-0.809017, 0.587785) * radius, 0.0);
+    let d = textureSampleLevel(outline_texture, outline_sampler, uv + vec2(-0.809017, -0.587785) * radius, 0.0);
+    let e = textureSampleLevel(outline_texture, outline_sampler, uv + vec2(0.309017, -0.951057) * radius, 0.0);
+    let outline = stronger(stronger(stronger(a, b), stronger(c, d)), e);
 
-    for (var i = 0u; i < 6u; i++) {
-        let sample = outline_sample(outline_xy + DIRECTIONS[i] * radius);
-        let sample_alpha = sample.a * (1.0 - center.a);
-        if sample_alpha > alpha {
-            outline = vec4(sample.rgb / max(sample.a, 1e-6), sample.a);
-            alpha = sample_alpha;
-        }
-    }
-
-    if alpha == 0.0 {
-        discard;
-    }
-
-    return vec4(outline.rgb, alpha);
+    return outline * outside;
 }

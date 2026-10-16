@@ -18,7 +18,7 @@ export type TerrainProps = PickHandlers &
 
 export const terrain = createLayerType<TerrainProps>(
   (context, { imageryUrl, elevationUrl, ...props }) => {
-    const { device, pickRegistry } = context;
+    const { device, pickRegistry, devicePixelRatio } = context;
 
     const maxTiles = 1024;
     const tilesBuffer = createDataBuffer(
@@ -70,6 +70,8 @@ export const terrain = createLayerType<TerrainProps>(
       imageryMapBuffer: imageryMap.buffer,
       elevationMapBuffer: elevationMap.buffer,
       elevationTextures,
+      imageryTextures,
+      devicePixelRatio,
     });
 
     const renderPipeline = createRenderPipeline({

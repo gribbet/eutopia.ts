@@ -4,9 +4,11 @@
 @group(1) @binding(3) var<storage, read> imagery_map: array<MapEntry>;
 @group(1) @binding(4) var<storage, read> elevation_map: array<MapEntry>;
 @group(1) @binding(5) var elevation_textures: texture_2d_array<f32>;
+@group(1) @binding(6) var imagery_textures: texture_2d_array<f32>;
 
-const SUBDIVIDE_PIXEL_RATIO = 1.0;
-const VIEW_MARGIN = 1.0;
+override device_pixel_ratio: f32 = 1.0;
+
+const VIEW_MARGIN = 1.2;
 
 fn tile_elevation(tile: vec3<u32>) -> f32 {
     let size = arrayLength(&elevation_cache);
@@ -39,15 +41,15 @@ fn projectTile(tile: vec3<u32>) -> vec4<f32> {
     return value;
 }
 
-fn screen(v: vec4<f32>) -> vec3<f32> {
-    return v.xyz / v.w;
+fn screen(v: vec4<f32>) -> vec2<f32> {
+    return v.xy / v.w;
 }
 
 
 @compute @workgroup_size(1)
 fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
-    let terrain_size = textureDimensions(elevation_textures);
-    let subdivide_pixel_threshold = f32(max(256u, max(terrain_size.x, terrain_size.y))) * SUBDIVIDE_PIXEL_RATIO;
+    let subdivide_pixel_threshold = tile_split_threshold(imagery_textures);
+    let pixel_scale = max(round(view.screen_size * device_pixel_ratio), vec2<f32>(1.0)) * 0.5;
     var stack: array<vec3<u32>, 256>;
     var index = 1u;
     var total = 0u;
@@ -88,12 +90,15 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             let n3 = screen(c3);
             let n4 = screen(c4);
 
-            let n_max = max(max(n1, n2), max(n3, n4));
-            let n_min = min(min(n1, n2), min(n3, n4));
-
-            let span = n_max - n_min;
-            let pixels = span.xy * view.screen_size / 2.0;
-            subdivide = max(pixels.x, pixels.y) > subdivide_pixel_threshold;
+            let horizontal = max(
+                length((n2 - n1) * pixel_scale),
+                length((n4 - n3) * pixel_scale),
+            );
+            let vertical = max(
+                length((n3 - n1) * pixel_scale),
+                length((n4 - n2) * pixel_scale),
+            );
+            subdivide = max(horizontal, vertical) > subdivide_pixel_threshold;
         }
 
         if subdivide && z <= 22u {

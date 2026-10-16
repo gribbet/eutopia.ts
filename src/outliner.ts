@@ -31,25 +31,25 @@ export const createOutliner = (context: Context) => {
 
   const bindGroupLayout = device.createBindGroupLayout({
     entries: [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.FRAGMENT,
-        texture: {},
-      },
-      {
-        binding: 1,
-        visibility: GPUShaderStage.FRAGMENT,
-        sampler: {},
-      },
+      { binding: 0, visibility: GPUShaderStage.FRAGMENT, texture: {} },
+      { binding: 1, visibility: GPUShaderStage.FRAGMENT, sampler: {} },
     ],
   });
-
-  const outlineSampler = device.createSampler({
+  const sampler = device.createSampler({
     addressModeU: "clamp-to-edge",
     addressModeV: "clamp-to-edge",
     magFilter: "linear",
     minFilter: "linear",
   });
+  const bindGroup = $(() =>
+    device.createBindGroup({
+      layout: bindGroupLayout,
+      entries: [
+        { binding: 0, resource: resolvedOutlineTexture().createView() },
+        { binding: 1, resource: sampler },
+      ],
+    }),
+  );
 
   const pipeline = $(() => {
     const code = shader();
@@ -73,16 +73,6 @@ export const createOutliner = (context: Context) => {
       },
     });
   });
-
-  const bindGroup = $(() =>
-    device.createBindGroup({
-      layout: bindGroupLayout,
-      entries: [
-        { binding: 0, resource: resolvedOutlineTexture().createView() },
-        { binding: 1, resource: outlineSampler },
-      ],
-    }),
-  );
 
   const attachment = (): GPURenderPassColorAttachment => ({
     view: outlineTexture().createView(),

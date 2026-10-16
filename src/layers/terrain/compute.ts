@@ -11,6 +11,8 @@ export const createComputePipeline = ({
   elevationMapBuffer,
   imageryMapBuffer,
   elevationTextures,
+  imageryTextures,
+  devicePixelRatio,
 }: {
   device: GPUDevice;
   tilesBuffer: GPUBuffer;
@@ -18,6 +20,8 @@ export const createComputePipeline = ({
   imageryMapBuffer: GPUBuffer;
   elevationMapBuffer: GPUBuffer;
   elevationTextures: Signal<GPUTexture>;
+  imageryTextures: Signal<GPUTexture>;
+  devicePixelRatio: number;
 }) => {
   const shader = loadShaders(
     new URL("../common.wgsl", import.meta.url),
@@ -56,6 +60,11 @@ export const createComputePipeline = ({
         visibility: GPUShaderStage.COMPUTE,
         texture: { viewDimension: "2d-array" },
       },
+      {
+        binding: 6,
+        visibility: GPUShaderStage.COMPUTE,
+        texture: { viewDimension: "2d-array" },
+      },
     ],
   });
 
@@ -74,6 +83,7 @@ export const createComputePipeline = ({
       compute: {
         module,
         entryPoint: "main",
+        constants: { device_pixel_ratio: devicePixelRatio },
       },
     });
   });
@@ -110,6 +120,10 @@ export const createComputePipeline = ({
         {
           binding: 5,
           resource: elevationTextures().createView({ dimension: "2d-array" }),
+        },
+        {
+          binding: 6,
+          resource: imageryTextures().createView({ dimension: "2d-array" }),
         },
       ],
     }),
