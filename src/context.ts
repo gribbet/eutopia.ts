@@ -29,8 +29,6 @@ export const createContext = (
   });
 
   const resize = ({ width, height }: { width: number; height: number }) => {
-    width = Math.max(1, width);
-    height = Math.max(1, height);
     setSize([width, height]);
     const [textureWidth, textureHeight] = textureSize();
     element.width = textureWidth;
