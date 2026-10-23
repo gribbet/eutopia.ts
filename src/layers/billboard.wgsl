@@ -53,7 +53,7 @@ fn vertex(
     let clip = view.projection * vec4(local, 1.0);
     let scale = clamp(billboard.size / clip.w / max(1.0, height) * view.screen_size.y, billboard.min_scale, billboard.max_scale);
     let corner_offset = corners[vertex_index] * vec2(aspect / screen_aspect, -1.0) * scale * height / view.screen_size.y;
-    let pixel_offset = billboard.offset * vec2(2.0, -2.0) / view.screen_size;
+    let pixel_offset = billboard.offset * scale * vec2(2.0, -2.0) / view.screen_size;
     let position = view.projection * vec4(local, 1.0) + vec4((corner_offset + pixel_offset) * clip.w, 0.0, 0.0);
 
 
