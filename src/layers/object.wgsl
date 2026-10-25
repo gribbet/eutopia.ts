@@ -11,6 +11,8 @@ struct Instance {
 };
 
 @group(1) @binding(0) var<storage, read> instances: array<Instance>;
+@group(1) @binding(1) var image: texture_2d<f32>;
+@group(1) @binding(2) var image_sampler: sampler;
 
 struct Vertex {
     @builtin(position) position: vec4<f32>,
@@ -107,7 +109,11 @@ fn render(input: Vertex) -> RenderOutput {
         discard;
     }
     let intensity = max(0.0, dot(input.normal, vec3<f32>(0.0, 0.0, 1.0)));
-    let color = vec4<f32>(input.color.rgb + input.diffuse.rgb * intensity, input.color.a);
+    let texel = textureSample(image, image_sampler, input.uv);
+    let color = vec4<f32>(
+        (input.color.rgb + input.diffuse.rgb * intensity) * texel.rgb,
+        input.color.a * texel.a,
+    );
     return RenderOutput(color, input.outline);
 }
 

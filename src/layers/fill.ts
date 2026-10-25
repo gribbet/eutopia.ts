@@ -1,11 +1,10 @@
-import { $, effect, resolve, signal } from "signaloits";
+import { $, effect, resolve } from "signaloits";
 
 import { createLayerType, loadShader } from "../common";
 import type { Vec2, Vec3, Vec4 } from "../model";
 import type { PickHandlers } from "../pick-registry";
+import { createImageTexture } from "../image-texture";
 import { array, buffer, position, struct, u32, vec2f, vec4f } from "../storage";
-import { createTexture } from "../texture";
-import { loadTextureImage } from "../texture-loader";
 import { createLayerRenderer } from "./common";
 import type { CommonLayerProps } from "./common";
 
@@ -42,39 +41,7 @@ export const fill = createLayerType<FillProps>(
         initialCapacity: 1024,
       },
     );
-    const initialTexture = createTexture(device, {
-      size: [1, 1],
-      format: "rgba8unorm",
-      usage:
-        GPUTextureUsage.TEXTURE_BINDING |
-        GPUTextureUsage.COPY_DST |
-        GPUTextureUsage.RENDER_ATTACHMENT,
-    });
-    const [imageTexture, setImageTexture] = signal(initialTexture);
-    const loadImage = async (url: string) => {
-      try {
-        const {
-          image: source,
-          size: [width, height],
-        } = await loadTextureImage(url);
-        const texture = createTexture(device, {
-          size: [width, height],
-          format: "rgba8unorm",
-          usage:
-            GPUTextureUsage.TEXTURE_BINDING |
-            GPUTextureUsage.COPY_DST |
-            GPUTextureUsage.RENDER_ATTACHMENT,
-        });
-        device.queue.copyExternalImageToTexture({ source }, { texture }, [
-          width,
-          height,
-        ]);
-        setImageTexture(texture);
-      } catch (error) {
-        console.warn("Failed to load fill image", error);
-      }
-    };
-    effect(() => void loadImage(resolve(image) ?? whiteImage));
+    const imageTexture = createImageTexture({ device, image, label: "fill" });
     const indexStorage = buffer(array(u32()), device, {
       usage: GPUBufferUsage.INDEX,
       initialCapacity: 1024,
@@ -171,5 +138,3 @@ export const fill = createLayerType<FillProps>(
   },
 );
 
-const whiteImage =
-  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR4nGP4DwQACfsD/fteaysAAAAASUVORK5CYII=";

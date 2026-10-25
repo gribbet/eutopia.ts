@@ -3,6 +3,7 @@ import type { Properties } from "signaloits";
 
 import { createDataBuffer } from "../buffer";
 import { createLayerType, loadShader } from "../common";
+import { createImageTexture } from "../image-texture";
 import type { Vec2, Vec3, Vec4 } from "../model";
 import type { PickHandlers } from "../pick-registry";
 import {
@@ -15,6 +16,7 @@ import {
 } from "../storage";
 import { createLayerRenderer } from "./common";
 import type { CommonLayerProps } from "./common";
+
 export type Vertex = {
   position: Vec3;
   color?: Vec4;
@@ -25,6 +27,7 @@ export type Vertex = {
 export type Mesh = {
   vertices: readonly Vertex[];
   indices: readonly Vec3[];
+  image?: string;
 };
 
 export type Instance = PickHandlers & {
@@ -65,6 +68,9 @@ export const object = createLayerType<ObjectProps>(
       },
     );
 
+    const image = $(() => resolve(mesh).image);
+    const imageTexture = createImageTexture({ device, image, label: "mesh" });
+
     const shader = loadShader(new URL("./object.wgsl", import.meta.url));
 
     const bindGroupLayout = device.createBindGroupLayout({
@@ -74,13 +80,32 @@ export const object = createLayerType<ObjectProps>(
           visibility: GPUShaderStage.VERTEX,
           buffer: { type: "read-only-storage" },
         },
+        {
+          binding: 1,
+          visibility: GPUShaderStage.FRAGMENT,
+          texture: { viewDimension: "2d" },
+        },
+        {
+          binding: 2,
+          visibility: GPUShaderStage.FRAGMENT,
+          sampler: { type: "filtering" },
+        },
       ],
+    });
+
+    const sampler = device.createSampler({
+      magFilter: "linear",
+      minFilter: "linear",
     });
 
     const bindGroup = $(() =>
       device.createBindGroup({
         layout: bindGroupLayout,
-        entries: [{ binding: 0, resource: { buffer: slots.buffer() } }],
+        entries: [
+          { binding: 0, resource: { buffer: slots.buffer() } },
+          { binding: 1, resource: imageTexture().createView() },
+          { binding: 2, resource: sampler },
+        ],
       }),
     );
 
@@ -207,3 +232,4 @@ export const object = createLayerType<ObjectProps>(
     };
   },
 );
+
