@@ -1,25 +1,29 @@
-import { $, effect, resolve } from "signaloits";
+import { $, effect, resolve, signal } from "signaloits";
 
 import { createLayerType, loadShader } from "../common";
-import type { Vec3, Vec4 } from "../model";
+import type { Vec2, Vec3, Vec4 } from "../model";
 import type { PickHandlers } from "../pick-registry";
-import { array, buffer, position, struct, u32, vec4f } from "../storage";
+import { array, buffer, position, struct, u32, vec2f, vec4f } from "../storage";
+import { createTexture } from "../texture";
+import { loadTextureImage } from "../texture-loader";
 import { createLayerRenderer } from "./common";
 import type { CommonLayerProps } from "./common";
 
 export type Vertex = {
   position: Vec3;
-  color: Vec4;
+  color?: Vec4;
+  uv?: Vec2;
 };
 
 export type FillProps = PickHandlers &
   CommonLayerProps & {
     vertices: readonly Vertex[];
     indices: readonly number[];
+    image?: string;
   };
 
 export const fill = createLayerType<FillProps>(
-  (context, { vertices, indices, outline, ...props }) => {
+  (context, { vertices, indices, image, outline, ...props }) => {
     const { device, pickRegistry } = context;
 
     const storage = buffer(
@@ -27,6 +31,7 @@ export const fill = createLayerType<FillProps>(
         struct({
           position: position(),
           color: vec4f(),
+          uv: vec2f(),
           pickId: u32(),
           outline: vec4f(),
         }),
@@ -37,6 +42,39 @@ export const fill = createLayerType<FillProps>(
         initialCapacity: 1024,
       },
     );
+    const initialTexture = createTexture(device, {
+      size: [1, 1],
+      format: "rgba8unorm",
+      usage:
+        GPUTextureUsage.TEXTURE_BINDING |
+        GPUTextureUsage.COPY_DST |
+        GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+    const [imageTexture, setImageTexture] = signal(initialTexture);
+    const loadImage = async (url: string) => {
+      try {
+        const {
+          image: source,
+          size: [width, height],
+        } = await loadTextureImage(url);
+        const texture = createTexture(device, {
+          size: [width, height],
+          format: "rgba8unorm",
+          usage:
+            GPUTextureUsage.TEXTURE_BINDING |
+            GPUTextureUsage.COPY_DST |
+            GPUTextureUsage.RENDER_ATTACHMENT,
+        });
+        device.queue.copyExternalImageToTexture({ source }, { texture }, [
+          width,
+          height,
+        ]);
+        setImageTexture(texture);
+      } catch (error) {
+        console.warn("Failed to load fill image", error);
+      }
+    };
+    effect(() => void loadImage(resolve(image) ?? whiteImage));
     const indexStorage = buffer(array(u32()), device, {
       usage: GPUBufferUsage.INDEX,
       initialCapacity: 1024,
@@ -51,13 +89,32 @@ export const fill = createLayerType<FillProps>(
           visibility: GPUShaderStage.VERTEX,
           buffer: { type: "read-only-storage" },
         },
+        {
+          binding: 1,
+          visibility: GPUShaderStage.FRAGMENT,
+          texture: { viewDimension: "2d" },
+        },
+        {
+          binding: 2,
+          visibility: GPUShaderStage.FRAGMENT,
+          sampler: { type: "filtering" },
+        },
       ],
+    });
+
+    const sampler = device.createSampler({
+      magFilter: "linear",
+      minFilter: "linear",
     });
 
     const bindGroup = $(() =>
       device.createBindGroup({
         layout: bindGroupLayout,
-        entries: [{ binding: 0, resource: { buffer: storage.buffer() } }],
+        entries: [
+          { binding: 0, resource: { buffer: storage.buffer() } },
+          { binding: 1, resource: imageTexture().createView() },
+          { binding: 2, resource: sampler },
+        ],
       }),
     );
 
@@ -89,7 +146,8 @@ export const fill = createLayerType<FillProps>(
         const v = _vertices[i];
         if (!v) return;
         item.position = v.position;
-        item.color = v.color;
+        item.color = v.color ?? [1, 1, 1, 1];
+        item.uv = v.uv ?? [0, 0];
         item.pickId = pickId();
         item.outline = _outline;
       });
@@ -112,3 +170,6 @@ export const fill = createLayerType<FillProps>(
     };
   },
 );
+
+const whiteImage =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR4nGP4DwQACfsD/fteaysAAAAASUVORK5CYII=";
