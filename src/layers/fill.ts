@@ -1,9 +1,9 @@
 import { $, effect, resolve } from "signaloits";
 
 import { createLayerType, loadShader } from "../common";
+import { createImageTexture } from "../image-texture";
 import type { Vec2, Vec3, Vec4 } from "../model";
 import type { PickHandlers } from "../pick-registry";
-import { createImageTexture } from "../image-texture";
 import { array, buffer, position, struct, u32, vec2f, vec4f } from "../storage";
 import { createLayerRenderer } from "./common";
 import type { CommonLayerProps } from "./common";
@@ -137,4 +137,3 @@ export const fill = createLayerType<FillProps>(
     };
   },
 );
-

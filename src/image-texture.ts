@@ -40,10 +40,11 @@ export const createImageTexture = ({
           GPUTextureUsage.COPY_DST |
           GPUTextureUsage.RENDER_ATTACHMENT,
       });
-      device.queue.copyExternalImageToTexture({ source }, { texture: nextTexture }, [
-        width,
-        height,
-      ]);
+      device.queue.copyExternalImageToTexture(
+        { source },
+        { texture: nextTexture },
+        [width, height],
+      );
       setImageTexture(nextTexture);
     } catch (error) {
       console.warn(`Failed to load ${label} image`, error);

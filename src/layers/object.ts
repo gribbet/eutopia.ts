@@ -232,4 +232,3 @@ export const object = createLayerType<ObjectProps>(
     };
   },
 );
-
