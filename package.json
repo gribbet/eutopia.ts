@@ -1,6 +1,10 @@
 {
   "name": "eutopia.ts",
-  "version": "0.5.2",
+  "version": "0.0.0-development",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gribbet/eutopia.ts.git"
+  },
   "files": [
     "dist"
   ],
@@ -30,6 +34,7 @@
     "@gribbet/vite-config": "^1.0.5",
     "@webgpu/types": "^0.1.74",
     "cpx2": "^9.0.3",
+    "semantic-release": "^25.0.9",
     "typescript": "^7.0.2",
     "vite-plus": "^1.1.0"
   },
