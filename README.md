@@ -8,6 +8,8 @@ Designed for performance, terrain level-of-detail calculations and elevation sam
 
 Fixed-point horizontal coordinates provide less than 2 cm resolution at the equator, avoiding global-scale `f32` precision loss.
 
+[Live demo](https://gribbet.github.io/eutopia.ts/) 
+
 ## Installation
 
 ```sh
