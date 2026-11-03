@@ -1,6 +1,7 @@
 {
   "name": "eutopia.ts",
   "version": "0.0.0-development",
+  "description": "A TypeScript WebGPU library for rendering interactive worlds.",
   "license": "MIT",
   "repository": {
     "type": "git",
