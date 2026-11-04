@@ -7,6 +7,7 @@ import {
   fill,
   line,
   map,
+  now,
   object,
   root,
   signal,
@@ -29,12 +30,6 @@ const mapboxToken =
 const imageryUrl = `https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}@2x.jpg90?access_token=${mapboxToken}`;
 const elevationUrl = `https://api.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}@2x.png?access_token=${mapboxToken}`;
 const outline: Vec4 = [0, 0, 0, 1];
-const emojis =
-  "🌍 🗼 🐋 🌋 🛰️ 🏝️ 🐘 🦒 🌌 🏔️ 🌊 🛶 🦜 🐧 🕌 🌸 🐉 🧭 🚀 🌴 🦁 🪸 🏜️ 🎈".split(
-    " ",
-  );
-const randomEmoji = () =>
-  emojis[Math.floor(Math.random() * emojis.length)] ?? "🌍";
 
 const device = await createDevice();
 
@@ -50,21 +45,33 @@ export const createApp = () =>
       fieldOfView: 45,
     });
 
-    const [time, setTime] = signal(0);
-    const animate = (t: number) => {
-      setTime(t);
-      requestAnimationFrame(animate);
-    };
-    requestAnimationFrame(animate);
+    const time = $(() => new Date(performance.timeOrigin + now() * 10000));
 
+    const itemCount = 100;
+const shapes = "■ ◆ ● ▰ ⬢".split(" ");
+    const textPalette: Vec4[] = [
+      [0.25, 0.82, 1.0, 1.0],
+      [0.42, 0.62, 1.0, 1.0],
+      [0.76, 0.55, 1.0, 1.0],
+    ];
+    const randomShape = () =>
+      shapes[Math.floor(Math.random() * shapes.length)] ?? "■";
+    const randomTextColor = () =>
+      textPalette[Math.floor(Math.random() * textPalette.length)] ??
+      textPalette[0]!;
+    const seededRandom = (seed: number) => {
+      const value = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
+      return value - Math.floor(value);
+    };
     const [items, setItems] = signal(
-      Array.from({ length: 100 }, () => {
+      Array.from({ length: itemCount }, () => {
         const longitude = Math.random() * 360 - 180;
         const latitude = (Math.asin(Math.random() * 2 - 1) * 180) / Math.PI;
         return {
           id: Math.random().toString(),
           position: [longitude, latitude, 20000] as Vec3,
-          emoji: randomEmoji(),
+          shape: randomShape(),
+          color: randomTextColor(),
           test: false,
         };
       }),
@@ -77,7 +84,8 @@ export const createApp = () =>
         {
           id,
           position,
-          emoji: randomEmoji(),
+          shape: randomShape(),
+          color: randomTextColor(),
           test: false,
         },
       ]);
@@ -87,50 +95,55 @@ export const createApp = () =>
     };
 
     const cubeMesh = createCubeMesh();
-    // Static global routes
-    const redOrangeLine = Array.from({ length: 1000 }, (_, i) => {
-      const t = i / 999;
-      const lon = -157 + t * (121 - -157);
-      const lat = 20 + Math.sin(t * Math.PI) * 42;
-      const alt = 520000 + Math.sin(t * Math.PI * 4) * 120000 + t * 180000;
-      const r = 1.0;
-      const g = t < 0.5 ? 0.2 + t * 1.6 : 1.0;
-      const b = t < 0.5 ? 0.2 : 0.2 + (t - 0.5) * 1.6;
-      const w = (28000 + Math.sin(t * Math.PI * 6) * 14000 + 14000) * 4;
-      return {
-        position: [lon, lat, alt] as const,
-        color: [r, g, b, 0.95] as const,
-        width: w,
-        maxWidthPixels: 12,
-      };
-    });
-
-    // Animated ring line that depends on time
-    const animatedRingLine = $(() => {
-      const pulse = 1600 + Math.sin(time() * 0.002) * 800;
-      const centerLon = -98.5;
-      const centerLat = 39.8;
-      const ringRadius = 18;
-      const count = 1000;
-      const ringPoints = Array.from({ length: count }, (_, i) => {
-        const t = (i / (count - 1)) * Math.PI * 2;
+    const trailCount = 10;
+    const trailPointCount = 100;
+    const trailPaths = Array.from({ length: trailCount }, (_, trailIndex) => {
+      const seed = trailIndex * 10;
+      const centerLongitude = seededRandom(seed + 1) * 360 - 180;
+      const centerLatitude = seededRandom(seed + 2) * 60 - 30;
+      const radiusLongitude = 20 + seededRandom(seed + 3) * 30;
+      const radiusLatitude = 10 + seededRandom(seed + 4) * 17;
+      const rotation = seededRandom(seed + 5) * Math.PI * 2;
+      const baseAltitude = 180000 + seededRandom(seed + 6) * 240000;
+      const altitudeVariation = 40000 + seededRandom(seed + 7) * 60000;
+      return Array.from({ length: trailPointCount }, (_, pointIndex) => {
+        const t = pointIndex / (trailPointCount - 1);
+        const angle = t * Math.PI * 2;
+        const x = Math.cos(angle) * radiusLongitude;
+        const y = Math.sin(angle) * radiusLatitude;
+        const longitude =
+          centerLongitude + x * Math.cos(rotation) - y * Math.sin(rotation);
+        const latitude =
+          centerLatitude + x * Math.sin(rotation) + y * Math.cos(rotation);
+        const altitude =
+          baseAltitude + Math.sin(angle + rotation) * altitudeVariation;
         return {
-          position: [
-            centerLon + Math.cos(t) * ringRadius,
-            centerLat + Math.sin(t) * ringRadius,
-            100000 + Math.sin(t * 3 + time() * 0.0015) * 80000,
-          ] as const,
-          color: [0.2, 0.9, 1.0, 0.9] as const,
-          width: pulse * 88,
-          maxWidthPixels: 12,
+          t,
+          position: [longitude, latitude, altitude] as const,
         };
       });
-      return ringPoints;
     });
 
-    const lineExamples = $(() => [animatedRingLine()]);
-
-    const staticLineExamples = [redOrangeLine];
+    const trailSpeed = 0.00000012;
+    const trailCycle = Math.PI * 1.2;
+    const visibleTrailLength = 0.32;
+    const animatedTrails = $(() => {
+      const phase = time().getTime() * trailSpeed;
+      return trailPaths.map((path, lineIndex) => {
+        const progress = (phase / trailCycle + lineIndex / trailCount) % 1;
+        return path.map(({ t, position }) => {
+          const age = (progress - t + 1) % 1;
+          const opacity =
+            age <= visibleTrailLength ? 1 - age / visibleTrailLength : 0;
+          return {
+            position,
+            color: [0.75, 0.25, 1.0, opacity] as const,
+            width: 90000 * opacity,
+            maxWidthPixels: 10 * opacity,
+          };
+        });
+      });
+    });
 
     const onTerrainClick = ({ position }: PickEvent) => appendItem(position);
 
@@ -138,7 +151,7 @@ export const createApp = () =>
       items,
       item => {
         const targetColor = $((): Vec4 =>
-          item().test ? [1.0, 0.35, 0.35, 1.0] : [1.0, 1.0, 1.0, 1.0],
+          item().test ? [1.0, 0.35, 0.35, 1.0] : item().color,
         );
         const position = $(() => item().position);
         const color = vec4Transition(targetColor);
@@ -152,14 +165,14 @@ export const createApp = () =>
         };
 
         return {
-          text: item().emoji,
+          text: item().shape,
           position,
           size: 100000,
           font: "sans-serif",
-          fontSize: 128,
+          fontSize: 100,
           color,
           outline,
-          minScale: 0.25,
+          minScale: 0.5,
           maxScale: 1.0,
           onClick: () => {
             const { id, test } = item();
@@ -175,53 +188,75 @@ export const createApp = () =>
       _ => _.id,
     );
 
+    const cubeCount = 10;
+    const cubeInstances = Array.from({ length: cubeCount }, (_, i) => {
+      const longitude = ((i * 137.508) % 360) - 180;
+      const latitude =
+        (Math.asin(2 * ((i + 0.5) / cubeCount) - 1) * 180) / Math.PI;
+      const [axisX, axisY, axisZ] = [
+        Math.sin(i * 2.4),
+        Math.cos(i * 1.7),
+        Math.sin(i * 0.9 + 1),
+      ];
+      const axisLength = Math.hypot(axisX, axisY, axisZ);
+      const orientation = $<Vec4>(() => {
+        const angle = time().getTime() * 0.0000005 + i * 0.37;
+        const halfAngle = angle / 2;
+        const sine = Math.sin(halfAngle) / axisLength;
+        return [axisX * sine, axisY * sine, axisZ * sine, Math.cos(halfAngle)];
+      });
+      return {
+        position: [longitude, latitude, 100000] as Vec3,
+        scale: 10000,
+        minScalePixels: 12,
+        maxScalePixels: 48,
+        orientation,
+        outline,
+      };
+    });
+
+    const auroraSegments = 64;
+    const auroraIndices = Array.from({ length: auroraSegments }, (_, i) => {
+      const start = i * 2;
+      return [start, start + 1, start + 2, start + 1, start + 3, start + 2];
+    }).flat();
+    const auroraVertices = $(() => {
+      const phase = time().getTime() * 0.00000004;
+      return Array.from({ length: auroraSegments + 1 }, (_, i) => {
+        const t = i / auroraSegments;
+        const longitude = -165 + t * 330;
+        const wave =
+          Math.sin(t * Math.PI * 2 + phase) * 8 +
+          Math.sin(t * Math.PI * 6 - phase * 1.3) * 3;
+        const centerLatitude = 65 + wave;
+        const width = 3 + Math.sin(t * Math.PI) * 5;
+        const opacity = Math.sin(t * Math.PI) * 0.55;
+        const altitude = 280000 + Math.sin(t * Math.PI * 4 + phase) * 40000;
+        return [
+          {
+            position: [longitude, centerLatitude - width, altitude] as Vec3,
+            color: [0.15, 0.85, 1.0, opacity * 0.35] as Vec4,
+          },
+          {
+            position: [longitude, centerLatitude + width, altitude] as Vec3,
+            color: [0.7, 0.3, 1.0, opacity] as Vec4,
+          },
+        ];
+      }).flat();
+    });
+
     const layers = $(() => [
       terrain({ imageryUrl, elevationUrl, onClick: onTerrainClick }),
-      atmosphere({}),
+      atmosphere({ time }),
       text({ entries: textEntries, polygonOffset: -1000 }),
-      line({ vertices: staticLineExamples, outline }),
-      line({ vertices: lineExamples, outline }),
+      line({ vertices: animatedTrails }),
       object({
         mesh: cubeMesh,
-        instances: Array.from({ length: 100 }, (_, i) => {
-          const longitude = ((i * 137.508) % 360) - 180;
-          const latitude =
-            (Math.asin(2 * ((i + 0.5) / 100) - 1) * 180) / Math.PI;
-          const [axisX, axisY, axisZ] = [
-            Math.sin(i * 2.4),
-            Math.cos(i * 1.7),
-            Math.sin(i * 0.9 + 1),
-          ];
-          const axisLength = Math.hypot(axisX, axisY, axisZ);
-          const orientation = $<Vec4>(() => {
-            const angle = time() * 0.0005 + i * 0.37;
-            const halfAngle = angle / 2;
-            const sine = Math.sin(halfAngle) / axisLength;
-            return [
-              axisX * sine,
-              axisY * sine,
-              axisZ * sine,
-              Math.cos(halfAngle),
-            ];
-          });
-          return {
-            position: [longitude, latitude, 100000],
-            scale: 10000,
-            minScalePixels: 12,
-            maxScalePixels: 48,
-            orientation,
-            outline,
-          };
-        }),
+        instances: cubeInstances,
       }),
       fill({
-        vertices: [
-          { position: [-103, 36, 300000], color: [1, 0, 0, 0.5] },
-          { position: [-94, 36, 300000], color: [0, 1, 0, 0.5] },
-          { position: [-94, 43, 300000], color: [0, 0, 1, 0.5] },
-          { position: [-103, 43, 300000], color: [1, 1, 0, 0.5] },
-        ],
-        indices: [0, 1, 2, 0, 2, 3],
+        vertices: auroraVertices,
+        indices: auroraIndices,
         depthWrite: false,
       }),
     ]);
@@ -254,7 +289,7 @@ const createCubeMesh = (): Mesh => {
         [1, 1, 1],
       ],
       normal: [1, 0, 0],
-      color: [1, 0, 0, 1],
+      color: [0.25, 0.82, 1.0, 1],
     },
     {
       corners: [
@@ -264,7 +299,7 @@ const createCubeMesh = (): Mesh => {
         [-1, 1, -1],
       ],
       normal: [-1, 0, 0],
-      color: [0, 1, 1, 1],
+      color: [0.25, 0.55, 0.9, 1],
     },
     {
       corners: [
@@ -274,7 +309,7 @@ const createCubeMesh = (): Mesh => {
         [-1, 1, -1],
       ],
       normal: [0, 1, 0],
-      color: [0, 1, 0, 1],
+      color: [0.76, 0.55, 1.0, 1],
     },
     {
       corners: [
@@ -284,7 +319,7 @@ const createCubeMesh = (): Mesh => {
         [-1, -1, 1],
       ],
       normal: [0, -1, 0],
-      color: [1, 0, 1, 1],
+      color: [0.52, 0.38, 0.85, 1],
     },
     {
       corners: [
@@ -294,7 +329,7 @@ const createCubeMesh = (): Mesh => {
         [-1, 1, 1],
       ],
       normal: [0, 0, 1],
-      color: [0, 0, 1, 1],
+      color: [0.42, 0.62, 1.0, 1],
     },
     {
       corners: [
@@ -304,7 +339,7 @@ const createCubeMesh = (): Mesh => {
         [1, 1, -1],
       ],
       normal: [0, 0, -1],
-      color: [1, 1, 0, 1],
+      color: [0.55, 0.9, 1.0, 1],
     },
   ];
 
