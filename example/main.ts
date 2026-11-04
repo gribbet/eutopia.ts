@@ -33,7 +33,8 @@ const emojis =
   "🌍 🗼 🐋 🌋 🛰️ 🏝️ 🐘 🦒 🌌 🏔️ 🌊 🛶 🦜 🐧 🕌 🌸 🐉 🧭 🚀 🌴 🦁 🪸 🏜️ 🎈".split(
     " ",
   );
-const randomEmoji = () => emojis[Math.floor(Math.random() * emojis.length)] ?? "🌍";
+const randomEmoji = () =>
+  emojis[Math.floor(Math.random() * emojis.length)] ?? "🌍";
 
 const device = await createDevice();
 
@@ -86,56 +87,23 @@ export const createApp = () =>
     };
 
     const cubeMesh = createCubeMesh();
-    const cubeSize = 1000; // 50 km half-extent
-    const spin = $<Vec4>(() => {
-      const a = time() * 0.0005;
-      return [0, Math.sin(a / 2), 0, Math.cos(a / 2)];
-    });
-
     // Static global routes
     const redOrangeLine = Array.from({ length: 1000 }, (_, i) => {
       const t = i / 999;
       const lon = -157 + t * (121 - -157);
       const lat = 20 + Math.sin(t * Math.PI) * 42;
-      const alt = 20000 + Math.sin(t * Math.PI * 4) * 120000 + t * 180000;
+      const alt = 520000 + Math.sin(t * Math.PI * 4) * 120000 + t * 180000;
       const r = 1.0;
       const g = t < 0.5 ? 0.2 + t * 1.6 : 1.0;
       const b = t < 0.5 ? 0.2 : 0.2 + (t - 0.5) * 1.6;
-      const w = 28000 + Math.sin(t * Math.PI * 6) * 14000 + 14000;
+      const w = (28000 + Math.sin(t * Math.PI * 6) * 14000 + 14000) * 4;
       return {
         position: [lon, lat, alt] as const,
         color: [r, g, b, 0.95] as const,
         width: w,
+        maxWidthPixels: 12,
       };
     });
-
-    const waypointsLine: { position: Vec3; color: Vec4; width: number }[] = [
-      {
-        position: [-123, 49, 150000],
-        color: [0.3, 0.9, 1.0, 0.85],
-        width: 60000,
-      },
-      {
-        position: [-74, 40, 500000],
-        color: [0.2, 0.8, 1.0, 0.85],
-        width: 60000,
-      },
-      {
-        position: [0, 51.5, 150000],
-        color: [0.1, 0.7, 1.0, 0.85],
-        width: 60000,
-      },
-      {
-        position: [37.6, 55.7, 500000],
-        color: [0.1, 0.6, 1.0, 0.85],
-        width: 60000,
-      },
-      {
-        position: [139.7, 35.7, 150000],
-        color: [0.1, 0.5, 1.0, 0.85],
-        width: 60000,
-      },
-    ];
 
     // Animated ring line that depends on time
     const animatedRingLine = $(() => {
@@ -153,7 +121,8 @@ export const createApp = () =>
             100000 + Math.sin(t * 3 + time() * 0.0015) * 80000,
           ] as const,
           color: [0.2, 0.9, 1.0, 0.9] as const,
-          width: pulse * 22,
+          width: pulse * 88,
+          maxWidthPixels: 12,
         };
       });
       return ringPoints;
@@ -161,7 +130,7 @@ export const createApp = () =>
 
     const lineExamples = $(() => [animatedRingLine()]);
 
-    const staticLineExamples = [redOrangeLine, waypointsLine];
+    const staticLineExamples = [redOrangeLine];
 
     const onTerrainClick = ({ position }: PickEvent) => appendItem(position);
 
@@ -185,7 +154,7 @@ export const createApp = () =>
         return {
           text: item().emoji,
           position,
-          size: 160000,
+          size: 100000,
           font: "sans-serif",
           fontSize: 128,
           color,
@@ -214,16 +183,36 @@ export const createApp = () =>
       line({ vertices: lineExamples, outline }),
       object({
         mesh: cubeMesh,
-        instances: [
-          {
-            position: [-98.5, 39.8, 100000],
-            scale: cubeSize * 20,
-            minScalePixels: 24,
-            maxScalePixels: 96,
-            orientation: spin,
+        instances: Array.from({ length: 100 }, (_, i) => {
+          const longitude = ((i * 137.508) % 360) - 180;
+          const latitude =
+            (Math.asin(2 * ((i + 0.5) / 100) - 1) * 180) / Math.PI;
+          const [axisX, axisY, axisZ] = [
+            Math.sin(i * 2.4),
+            Math.cos(i * 1.7),
+            Math.sin(i * 0.9 + 1),
+          ];
+          const axisLength = Math.hypot(axisX, axisY, axisZ);
+          const orientation = $<Vec4>(() => {
+            const angle = time() * 0.0005 + i * 0.37;
+            const halfAngle = angle / 2;
+            const sine = Math.sin(halfAngle) / axisLength;
+            return [
+              axisX * sine,
+              axisY * sine,
+              axisZ * sine,
+              Math.cos(halfAngle),
+            ];
+          });
+          return {
+            position: [longitude, latitude, 100000],
+            scale: 10000,
+            minScalePixels: 12,
+            maxScalePixels: 48,
+            orientation,
             outline,
-          },
-        ],
+          };
+        }),
       }),
       fill({
         vertices: [
