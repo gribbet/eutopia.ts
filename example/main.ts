@@ -229,8 +229,6 @@ export const createApp = () =>
     };
   });
 
-createApp();
-
 const createCubeMesh = (): Mesh => {
   const faces: {
     corners: [number, number, number][];
@@ -323,3 +321,5 @@ const createCubeMesh = (): Mesh => {
 
   return { vertices, indices };
 };
+
+createApp();
