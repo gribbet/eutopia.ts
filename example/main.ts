@@ -48,7 +48,7 @@ export const createApp = () =>
     const time = $(() => new Date(performance.timeOrigin + now() * 10000));
 
     const itemCount = 100;
-const shapes = "■ ◆ ● ▰ ⬢".split(" ");
+    const shapes = "■ ◆ ● ▰ ⬢".split(" ");
     const textPalette: Vec4[] = [
       [0.25, 0.82, 1.0, 1.0],
       [0.42, 0.62, 1.0, 1.0],
