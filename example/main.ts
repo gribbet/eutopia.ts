@@ -29,6 +29,11 @@ const mapboxToken =
 const imageryUrl = `https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}@2x.jpg90?access_token=${mapboxToken}`;
 const elevationUrl = `https://api.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}@2x.png?access_token=${mapboxToken}`;
 const outline: Vec4 = [0, 0, 0, 1];
+const emojis =
+  "🌍 🗼 🐋 🌋 🛰️ 🏝️ 🐘 🦒 🌌 🏔️ 🌊 🛶 🦜 🐧 🕌 🌸 🐉 🧭 🚀 🌴 🦁 🪸 🏜️ 🎈".split(
+    " ",
+  );
+const randomEmoji = () => emojis[Math.floor(Math.random() * emojis.length)] ?? "🌍";
 
 const device = await createDevice();
 
@@ -38,8 +43,8 @@ export const createApp = () =>
     document.body.appendChild(element);
 
     const [view, setView] = signal<View>({
-      center: [-122.4194, 37.7749, 0],
-      distance: 100000,
+      center: [-98.5, 39.8, 0],
+      distance: 12000000,
       orientation: [0, 0, 0],
       fieldOfView: 45,
     });
@@ -51,13 +56,30 @@ export const createApp = () =>
     };
     requestAnimationFrame(animate);
 
-    const [items, setItems] = signal<
-      { id: string; position: Vec3; test: boolean }[]
-    >([]);
+    const [items, setItems] = signal(
+      Array.from({ length: 100 }, () => {
+        const longitude = Math.random() * 360 - 180;
+        const latitude = (Math.asin(Math.random() * 2 - 1) * 180) / Math.PI;
+        return {
+          id: Math.random().toString(),
+          position: [longitude, latitude, 20000] as Vec3,
+          emoji: randomEmoji(),
+          test: false,
+        };
+      }),
+    );
 
     const appendItem = (position: Vec3) => {
       const id = Math.random().toString();
-      setItems([...items(), { id, position, test: false }]);
+      setItems([
+        ...items(),
+        {
+          id,
+          position,
+          emoji: randomEmoji(),
+          test: false,
+        },
+      ]);
       setTimeout(() => {
         setItems(items().filter(i => i.id !== id));
       }, 50000);
@@ -70,16 +92,16 @@ export const createApp = () =>
       return [0, Math.sin(a / 2), 0, Math.cos(a / 2)];
     });
 
-    // Static lines that don't animate
+    // Static global routes
     const redOrangeLine = Array.from({ length: 1000 }, (_, i) => {
       const t = i / 999;
-      const lon = -122.58 + t * (-122.16 - -122.58);
-      const lat = 37.69 + Math.sin(t * Math.PI) * 0.17;
-      const alt = 2000 + Math.sin(t * Math.PI * 4) * 1500 + t * 2000;
+      const lon = -157 + t * (121 - -157);
+      const lat = 20 + Math.sin(t * Math.PI) * 42;
+      const alt = 20000 + Math.sin(t * Math.PI * 4) * 120000 + t * 180000;
       const r = 1.0;
       const g = t < 0.5 ? 0.2 + t * 1.6 : 1.0;
       const b = t < 0.5 ? 0.2 : 0.2 + (t - 0.5) * 1.6;
-      const w = 600 + Math.sin(t * Math.PI * 6) * 600 + 600;
+      const w = 28000 + Math.sin(t * Math.PI * 6) * 14000 + 14000;
       return {
         position: [lon, lat, alt] as const,
         color: [r, g, b, 0.95] as const,
@@ -89,38 +111,38 @@ export const createApp = () =>
 
     const waypointsLine: { position: Vec3; color: Vec4; width: number }[] = [
       {
-        position: [-122.52, 37.92, 2000],
+        position: [-123, 49, 150000],
         color: [0.3, 0.9, 1.0, 0.85],
-        width: 1800,
+        width: 60000,
       },
       {
-        position: [-122.45, 37.86, 7000],
+        position: [-74, 40, 500000],
         color: [0.2, 0.8, 1.0, 0.85],
-        width: 1800,
+        width: 60000,
       },
       {
-        position: [-122.38, 37.92, 2000],
+        position: [0, 51.5, 150000],
         color: [0.1, 0.7, 1.0, 0.85],
-        width: 1800,
+        width: 60000,
       },
       {
-        position: [-122.31, 37.86, 7000],
+        position: [37.6, 55.7, 500000],
         color: [0.1, 0.6, 1.0, 0.85],
-        width: 1800,
+        width: 60000,
       },
       {
-        position: [-122.24, 37.92, 2000],
+        position: [139.7, 35.7, 150000],
         color: [0.1, 0.5, 1.0, 0.85],
-        width: 1800,
+        width: 60000,
       },
     ];
 
     // Animated ring line that depends on time
     const animatedRingLine = $(() => {
-      const pulse = 800 + Math.sin(time() * 0.002) * 400;
-      const centerLon = -122.4194;
-      const centerLat = 37.7749;
-      const ringRadius = 0.12;
+      const pulse = 1600 + Math.sin(time() * 0.002) * 800;
+      const centerLon = -98.5;
+      const centerLat = 39.8;
+      const ringRadius = 18;
       const count = 1000;
       const ringPoints = Array.from({ length: count }, (_, i) => {
         const t = (i / (count - 1)) * Math.PI * 2;
@@ -128,10 +150,10 @@ export const createApp = () =>
           position: [
             centerLon + Math.cos(t) * ringRadius,
             centerLat + Math.sin(t) * ringRadius,
-            3000 + Math.sin(t * 3 + time() * 0.0015) * 1200,
+            100000 + Math.sin(t * 3 + time() * 0.0015) * 80000,
           ] as const,
           color: [0.2, 0.9, 1.0, 0.9] as const,
-          width: pulse,
+          width: pulse * 22,
         };
       });
       return ringPoints;
@@ -161,9 +183,9 @@ export const createApp = () =>
         };
 
         return {
-          text: "■",
+          text: item().emoji,
           position,
-          size: 6000,
+          size: 160000,
           font: "sans-serif",
           fontSize: 128,
           color,
@@ -187,15 +209,15 @@ export const createApp = () =>
     const layers = $(() => [
       terrain({ imageryUrl, elevationUrl, onClick: onTerrainClick }),
       atmosphere({}),
-      text({ entries: textEntries, polygonOffset: -100 }),
+      text({ entries: textEntries, polygonOffset: -1000 }),
       line({ vertices: staticLineExamples, outline }),
       line({ vertices: lineExamples, outline }),
       object({
         mesh: cubeMesh,
         instances: [
           {
-            position: [-122.4194, 37.7749, 10000],
-            scale: cubeSize,
+            position: [-98.5, 39.8, 100000],
+            scale: cubeSize * 20,
             minScalePixels: 24,
             maxScalePixels: 96,
             orientation: spin,
@@ -205,10 +227,10 @@ export const createApp = () =>
       }),
       fill({
         vertices: [
-          { position: [-122.5, 37.7, 10000], color: [1, 0, 0, 0.5] },
-          { position: [-122.3, 37.7, 10000], color: [0, 1, 0, 0.5] },
-          { position: [-122.3, 37.9, 10000], color: [0, 0, 1, 0.5] },
-          { position: [-122.5, 37.9, 10000], color: [1, 1, 0, 0.5] },
+          { position: [-103, 36, 300000], color: [1, 0, 0, 0.5] },
+          { position: [-94, 36, 300000], color: [0, 1, 0, 0.5] },
+          { position: [-94, 43, 300000], color: [0, 0, 1, 0.5] },
+          { position: [-103, 43, 300000], color: [1, 1, 0, 0.5] },
         ],
         indices: [0, 1, 2, 0, 2, 3],
         depthWrite: false,
