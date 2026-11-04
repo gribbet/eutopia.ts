@@ -2,7 +2,7 @@
 
 A TypeScript WebGPU library for rendering interactive worlds.
 
-Compose a world from reactive layers for terrain, lines, fills, polygons, text, billboards, and instanced objects. The library includes view controls, picking, and transitions.
+Compose a world from reactive layers powered by [Signaloits](https://github.com/gribbet/signaloits) for terrain, lines, fills, polygons, text, billboards, and instanced objects. The library includes view controls, picking, and transitions.
 
 Designed for performance, terrain level-of-detail calculations and elevation sampling run on the GPU.
 
