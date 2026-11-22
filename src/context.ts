@@ -20,17 +20,15 @@ export const createContext = (
 
   const devicePixelRatio = window.devicePixelRatio || 1;
   const [size, setSize] = signal<Vec2>([0, 0]);
-  const textureSize = $((): Vec2 => {
-    const [width, height] = size();
-    return [
-      Math.max(1, Math.round(width * devicePixelRatio)),
-      Math.max(1, Math.round(height * devicePixelRatio)),
-    ];
-  });
+  const toTextureSize = ([width, height]: Vec2): Vec2 => [
+    Math.max(1, Math.round(width * devicePixelRatio)),
+    Math.max(1, Math.round(height * devicePixelRatio)),
+  ];
+  const textureSize = $(() => toTextureSize(size()));
 
   const resize = ({ width, height }: { width: number; height: number }) => {
     setSize([width, height]);
-    const [textureWidth, textureHeight] = textureSize();
+    const [textureWidth, textureHeight] = toTextureSize([width, height]);
     element.width = textureWidth;
     element.height = textureHeight;
   };
